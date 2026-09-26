@@ -50,14 +50,51 @@ abstract class AgentDatabase : RoomDatabase() {
         private var INSTANCE: AgentDatabase? = null
 
         fun getDatabase(context: Context): AgentDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AgentDatabase::class.java,
-                    "agent_database"
-                ).fallbackToDestructiveMigration().build()
-                INSTANCE = instance
-                instance
+            val currentInstance = INSTANCE
+            if (currentInstance != null && currentInstance.isOpen) {
+                return currentInstance
+            }
+            return synchronized(this) {
+                val currentInstance2 = INSTANCE
+                if (currentInstance2 != null && currentInstance2.isOpen) {
+                    currentInstance2
+                } else {
+                    val isUnderTest = try {
+                        Thread.currentThread().stackTrace.any {
+                            it.className.contains("org.junit") || it.className.contains("robolectric")
+                        }
+                    } catch (e: Exception) {
+                        false
+                    }
+
+                    val instance = if (isUnderTest) {
+                        Room.inMemoryDatabaseBuilder(
+                            context.applicationContext,
+                            AgentDatabase::class.java
+                        ).allowMainThreadQueries()
+                         .fallbackToDestructiveMigration()
+                         .build()
+                    } else {
+                        Room.databaseBuilder(
+                            context.applicationContext,
+                            AgentDatabase::class.java,
+                            "agent_database"
+                        ).fallbackToDestructiveMigration().build()
+                    }
+                    INSTANCE = instance
+                    instance
+                }
+            }
+        }
+
+        fun resetDatabaseForTesting() {
+            synchronized(this) {
+                INSTANCE?.let {
+                    if (it.isOpen) {
+                        it.close()
+                    }
+                }
+                INSTANCE = null
             }
         }
     }

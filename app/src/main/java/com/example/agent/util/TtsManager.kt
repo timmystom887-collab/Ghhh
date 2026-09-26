@@ -5,9 +5,17 @@ import android.speech.tts.TextToSpeech
 import java.util.Locale
 
 class TtsManager(context: Context) : TextToSpeech.OnInitListener {
-    private var tts: TextToSpeech? = TextToSpeech(context, this)
+    private var tts: TextToSpeech? = null
     var isInitialized = false
         private set
+
+    init {
+        try {
+            tts = TextToSpeech(context.applicationContext, this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     private var pendingGreeting: String? = null
 

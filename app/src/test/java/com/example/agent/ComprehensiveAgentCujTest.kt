@@ -18,6 +18,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,9 +36,15 @@ class ComprehensiveAgentCujTest {
 
     @Before
     fun setUp() {
+        AgentDatabase.resetDatabaseForTesting()
         app = ApplicationProvider.getApplicationContext()
         database = AgentDatabase.getDatabase(app)
         viewModel = ChatViewModel(app)
+    }
+
+    @After
+    fun tearDown() {
+        AgentDatabase.resetDatabaseForTesting()
     }
 
     @Test
