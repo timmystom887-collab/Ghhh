@@ -1,0 +1,6 @@
+{
+  "name": "Agent Smith",
+  "description": "Autonomous Agent Smith powered by multi-provider AI, Matrix digital rain interface, and sub-agent task orchestration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

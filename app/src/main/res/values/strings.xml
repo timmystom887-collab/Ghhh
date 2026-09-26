@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Agent Smith</string>
+    <string name="accessibility_service_description">Agent Smith assists you in automating phone tasks, filling forms, and navigating apps securely with your consent.</string>
+</resources>

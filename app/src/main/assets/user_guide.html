@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AGENT SMITH // CLASSIFIED OPERATOR MANUAL & SYSTEM ARCHITECTURE</title>
+  <style>
+    :root {
+      --matrix-green: #00FF66;
+      --matrix-green-bright: #50FF88;
+      --matrix-green-dim: #008F39;
+      --matrix-cyan: #00E5FF;
+      --matrix-gold: #FFD700;
+      --matrix-red: #FF3366;
+      --matrix-bg: #050806;
+      --matrix-card-bg: rgba(10, 24, 15, 0.85);
+      --matrix-border: rgba(0, 255, 102, 0.3);
+      --matrix-border-hover: rgba(0, 255, 102, 0.8);
+      --matrix-text: #E0FFE8;
+      --matrix-muted: #7FA88B;
+      --font-mono: "Fira Code", "Courier New", Courier, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--matrix-bg);
+      color: var(--matrix-text);
+      font-family: var(--font-mono);
+      line-height: 1.6;
+      padding: 0;
+      overflow-x: hidden;
+      background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 102, 0.08) 0%, transparent 70%);
+    }
+
+    /* Terminal Scanline overlay */
+    .scanlines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0, 0, 0, 0.25) 50%,
+        rgba(0, 0, 0, 0.25)
+      );
+      background-size: 100% 4px;
+      z-index: 9999;
+      opacity: 0.6;
+    }
+
+    /* Navigation Bar */
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(5, 10, 7, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1.5px solid var(--matrix-border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--matrix-green);
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+    }
+
+    .brand-badge {
+      background: rgba(0, 255, 102, 0.15);
+      border: 1px solid var(--matrix-green);
+      color: var(--matrix-green);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+
+    nav {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      max-width: 70%;
+    }
+
+    nav a {
+      color: var(--matrix-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--matrix-green-bright);
+      background: rgba(0, 255, 102, 0.12);
+      border-color: var(--matrix-border);
+      text-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 80px 20px;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: var(--matrix-card-bg);
+      border: 1.5px solid var(--matrix-border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 255, 102, 0.08);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--matrix-cyan), var(--matrix-green), var(--matrix-cyan));
+    }
+
+    .hero-title {
+      font-size: 2.2rem;
+      color: var(--matrix-green-bright);
+      text-shadow: 0 0 12px rgba(0, 255, 102, 0.7);
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+
+    .hero-quote {
+      font-style: italic;
+      color: var(--matrix-cyan);
+      margin-bottom: 18px;
+      padding-left: 14px;
+      border-left: 3px solid var(--matrix-cyan);
+      font-size: 0.95rem;
+    }
+
+    .hero-desc {
+      color: var(--matrix-text);
+      font-size: 1rem;
+      margin-bottom: 24px;
+      font-family: var(--font-sans);
+    }
+
+    .hero-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .meta-badge {
+      background: rgba(0, 20, 10, 0.7);
+      border: 1px solid var(--matrix-border);
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .meta-badge .label {
+      color: var(--matrix-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .meta-badge .value {
+      color: var(--matrix-green);
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--matrix-card-bg);
+      border: 1.5px solid var(--matrix-border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.2s ease;
+    }
+
+    .section-card:hover {
+      border-color: var(--matrix-border-hover);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--matrix-border);
+    }
+
+    .section-header h2 {
+      color: var(--matrix-green-bright);
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+      text-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
+    }
+
+    .section-icon {
+      font-size: 1.6rem;
+    }
+
+    p {
+      color: var(--matrix-text);
+      font-family: var(--font-sans);
+      margin-bottom: 14px;
+      font-size: 0.95rem;
+    }
+
+    /* Image Showcase Container */
+    .img-showcase {
+      margin: 20px 0;
+      border: 1.5px solid var(--matrix-border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+    }
+
+    .img-showcase img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .img-caption {
+      background: rgba(0, 20, 10, 0.9);
+      padding: 10px 16px;
+      font-size: 0.8rem;
+      color: var(--matrix-muted);
+      border-top: 1px solid var(--matrix-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .img-caption span.tag {
+      color: var(--matrix-cyan);
+      font-weight: 600;
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .feature-item {
+      background: rgba(0, 255, 102, 0.04);
+      border: 1px solid var(--matrix-border);
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .feature-item h3 {
+      color: var(--matrix-green);
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-item p {
+      font-size: 0.88rem;
+      color: var(--matrix-text);
+      margin-bottom: 0;
+    }
+
+    /* Code & Terminal Blocks */
+    .terminal-box {
+      background: #020503;
+      border: 1px solid var(--matrix-green-dim);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--matrix-green-bright);
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .terminal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(0, 255, 102, 0.15);
+      color: var(--matrix-muted);
+      font-size: 0.75rem;
+    }
+
+    .cmd-prompt {
+      color: var(--matrix-cyan);
+    }
+
+    .cmd-out {
+      color: var(--matrix-text);
+      opacity: 0.9;
+    }
+
+    /* Step-by-Step Lists */
+    .step-list {
+      list-style: none;
+      counter-reset: step-counter;
+      margin: 20px 0;
+    }
+
+    .step-list li {
+      counter-increment: step-counter;
+      position: relative;
+      padding-left: 44px;
+      margin-bottom: 18px;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+    }
+
+    .step-list li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      background: rgba(0, 255, 102, 0.15);
+      border: 1.5px solid var(--matrix-green);
+      color: var(--matrix-green-bright);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .step-list strong {
+      color: var(--matrix-green-bright);
+      font-family: var(--font-mono);
+    }
+
+    /* Tables */
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.88rem;
+    }
+
+    .matrix-table th {
+      background: rgba(0, 255, 102, 0.12);
+      color: var(--matrix-green-bright);
+      text-align: left;
+      padding: 12px;
+      border: 1px solid var(--matrix-border);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .matrix-table td {
+      padding: 12px;
+      border: 1px solid var(--matrix-border);
+      color: var(--matrix-text);
+      font-family: var(--font-sans);
+    }
+
+    .matrix-table tr:nth-child(even) {
+      background: rgba(0, 20, 10, 0.4);
+    }
+
+    /* Use Case Card */
+    .use-case-card {
+      background: rgba(0, 255, 102, 0.03);
+      border: 1.5px solid var(--matrix-border);
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .use-case-card h3 {
+      color: var(--matrix-cyan);
+      font-size: 1.15rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .flow-badge {
+      background: rgba(0, 229, 255, 0.15);
+      border: 1px solid var(--matrix-cyan);
+      color: var(--matrix-cyan);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+
+    /* Interactive Search filter */
+    .guide-search-box {
+      width: 100%;
+      background: rgba(0, 20, 10, 0.8);
+      border: 1.5px solid var(--matrix-green);
+      border-radius: 8px;
+      padding: 14px 18px;
+      color: var(--matrix-green-bright);
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      outline: none;
+      box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+    }
+
+    .guide-search-box:focus {
+      border-color: var(--matrix-cyan);
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1.5px solid var(--matrix-border);
+      padding: 24px;
+      text-align: center;
+      color: var(--matrix-muted);
+      font-size: 0.8rem;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      nav {
+        max-width: 100%;
+      }
+      .hero-title {
+        font-size: 1.6rem;
+      }
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+
+  <header>
+    <div class="brand">
+      <span>⚡ AGENT SMITH</span>
+      <span class="brand-badge">CORE v3.5 // RAG & MCP READY</span>
+    </div>
+    <nav>
+      <a href="#overview" class="active">Overview</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#voice-phone">Voice & Calls</a>
+      <a href="#mcp-skills">MCP Protocol</a>
+      <a href="#knowledge-vault">Knowledge Vault</a>
+      <a href="#local-slm">Local SLMs</a>
+      <a href="#installation">Installation</a>
+      <a href="#use-cases">Use Cases</a>
+    </nav>
+  </header>
+
+  <div class="container">
+
+    <!-- SEARCH FILTER -->
+    <input type="text" id="guideSearch" class="guide-search-box" placeholder="🔍 Query Matrix System Documentation (e.g. 'phone call', 'MCP', 'Room DB', 'Ollama', 'RAG')..." onkeyup="filterGuide()">
+
+    <!-- HERO SECTION -->
+    <section id="overview" class="hero">
+      <h1 class="hero-title">CLASSIFIED SYSTEM MANUAL & OPERATOR GUIDE</h1>
+      <div class="hero-quote">"Never send a human to do a machine's job. Purpose is what defines us. Purpose binds us." — Agent Smith</div>
+      <p class="hero-desc">
+        Welcome to the operator command manual for <strong>Agent Smith</strong> — an autonomous, multi-modal, on-device and cloud-hybrid agentic intelligence ecosystem. Engineered for Android with Jetpack Compose, Room SQLite persistence, Google AI Studio Gemini API, on-device SLM execution (Qwen 2.5, Gemma, Llama 3.2), Anthropic Model Context Protocol (MCP), and real phone calling capabilities.
+      </p>
+
+      <div class="img-showcase">
+        <img src="file:///android_res/drawable/img_matrix_guide_hero_1790314656955.jpg" alt="Agent Smith Matrix Command Interface" onerror="this.src='https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1200'">
+        <div class="img-caption">
+          <span><strong>FIGURE 1.0</strong> // MATRIX COMMAND CORE & NEURAL RAIN TERMINAL</span>
+          <span class="tag">[OPERATIONAL]</span>
+        </div>
+      </div>
+
+      <div class="hero-meta-grid">
+        <div class="meta-badge">
+          <div class="label">System Architecture</div>
+          <div class="value">Clean MVVM + Room + MCP</div>
+        </div>
+        <div class="meta-badge">
+          <div class="label">Reasoning Engine</div>
+          <div class="value">Gemini 2.5 / Local SLM (Zero Filler)</div>
+        </div>
+        <div class="meta-badge">
+          <div class="label">Voice & Calling</div>
+          <div class="value">Android SpeechRecognizer + ACTION_CALL</div>
+        </div>
+        <div class="meta-badge">
+          <div class="label">Knowledge Base</div>
+          <div class="value">Room Neural Vault + RAG Retrieval</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SYSTEM ARCHITECTURE -->
+    <section id="architecture" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">🏛️</span>
+        <h2>SYSTEM ARCHITECTURE & MULTI-AGENT DESIGN</h2>
+      </div>
+      <p>
+        The Agent Smith architecture is composed of five interconnected subsystems designed for zero latency, data privacy, and full autonomy. Every prompt is synthesized with human-level reasoning, eliminating robotic boilerplate filler.
+      </p>
+
+      <div class="img-showcase">
+        <img src="file:///android_res/drawable/img_matrix_arch_diagram_1790314674918.jpg" alt="Agent Smith System Architecture Diagram" onerror="this.src='https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1200'">
+        <div class="img-caption">
+          <span><strong>FIGURE 2.0</strong> // FIVE-TIER NEURAL & HARDWARE ENGINE SCHEMATIC</span>
+          <span class="tag">[INTERCONNECTED]</span>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <h3>🧠 1. Neural Routing Core</h3>
+          <p>Dynamically grades task complexity (LOW, MEDIUM, HIGH) to route between on-device Small Language Models (SLMs) and Gemini Pro/Flash server-side reasoning.</p>
+        </div>
+        <div class="feature-item">
+          <h3>📞 2. Autonomous Phone Engine</h3>
+          <p>Compiles structured call scripts, handles restaurant reservations, business verifications, and logs timestamps and full conversation transcripts to Room DB.</p>
+        </div>
+        <div class="feature-item">
+          <h3>🌐 3. MCP Protocol Hub</h3>
+          <p>Implements Anthropic's Model Context Protocol to interface with local microservices, while autonomously creating new tools when missing capabilities are detected.</p>
+        </div>
+        <div class="feature-item">
+          <h3>📚 4. Neural Knowledge Vault</h3>
+          <p>Offline-first Room database storing articles, manuals, logs, and transcripts with real-time keyword indexing and Retrieval-Augmented Generation (RAG).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VOICE & REAL PHONE CALLING -->
+    <section id="voice-phone" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">🎙️</span>
+        <h2>VOICE INPUT & AUTONOMOUS PHONE CALLING MISSIONS</h2>
+      </div>
+      <p>
+        Agent Smith is capable of conducting real phone calls on your behalf. Whether booking a table at a bistro, inquiring about store inventory, or validating business hours, Smith formulates a natural call strategy, provides live audio visualizer feedback, and persists all call summaries.
+      </p>
+
+      <div class="img-showcase">
+        <img src="file:///android_res/drawable/img_matrix_voice_phone_1790314689340.jpg" alt="Voice Calling Assistant Interface" onerror="this.src='https://images.unsplash.com/photo-1589254065878-42c9da997008?q=80&w=1200'">
+        <div class="img-caption">
+          <span><strong>FIGURE 3.0</strong> // VOICE WAVEFORM SPECTROGRAM & ACTIVE PHONE MISSION</span>
+          <span class="tag">[ACTION_CALL READY]</span>
+        </div>
+      </div>
+
+      <div class="terminal-box">
+        <div class="terminal-header">
+          <span>PHONE CALL LOG SCHEMA (ROOM SQLite // call_logs)</span>
+          <span>SCHEMA v3.0</span>
+        </div>
+        <pre><code class="cmd-out">@Entity(tableName = "call_logs")
+data class CallLogEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val phoneNumber: String,         // E.g. "+1-555-0199"
+    val contactName: String,         // E.g. "Luigi's Italian Ristorante"
+    val direction: String,           // "OUTGOING" | "INCOMING"
+    val callType: String,            // "Reservation" | "Verification" | "Inquiry"
+    val objective: String,           // "Table for 2 at 7:30 PM on Saturday"
+    val summary: String,             // Complete transcript and confirmation result
+    val timestamp: Long,             // UNIX epoch millisecond
+    val durationSeconds: Int,        // Elapsed call time
+    val status: String               // "COMPLETED" | "IN_PROGRESS" | "FAILED"
+)</code></pre>
+      </div>
+
+      <h3 style="color: var(--matrix-green); margin: 18px 0 10px 0;">How to Initiate a Voice or Phone Task:</h3>
+      <ol class="step-list">
+        <li>Tap the <strong>Microphone Button</strong> or type a voice prompt such as: <em>"Call Luigi's Italian Ristorante at 555-0199 and book a table for 2 this Saturday at 8 PM"</em>.</li>
+        <li>Agent Smith formulates a <strong>Call Script Strategy</strong> with key parameters (party size, target time, fallback options, diet restrictions).</li>
+        <li>Review the <strong>Phone Call Mission Card</strong> generated in chat. Tap <strong>Initiate Direct Call</strong> to trigger <code>ACTION_CALL</code> via the Android Telephony framework.</li>
+        <li>Upon mission completion, the outcome is parsed and saved into the <strong>Matrix Call History Vault</strong> for future recall.</li>
+      </ol>
+    </section>
+
+    <!-- MCP & DYNAMIC SKILL SYNTHESIS -->
+    <section id="mcp-skills" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">🌐</span>
+        <h2>MODEL CONTEXT PROTOCOL (MCP) & DYNAMIC SKILLS</h2>
+      </div>
+      <p>
+        Anthropic's <strong>Model Context Protocol (MCP)</strong> allows Agent Smith to safely expose device tools, system diagnostics, and external API nodes. If a user asks Smith to perform a task without an existing tool, the <strong>Autonomous Capability Engine</strong> synthesizes the schema on demand and registers it in the local Room <code>SkillDao</code>.
+      </p>
+
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Tool Name</th>
+            <th>Type</th>
+            <th>Description & Parameters</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>make_call</strong></td>
+            <td>Hardware / Intent</td>
+            <td>Initiates direct telephony call with phone number and objective</td>
+            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
+          </tr>
+          <tr>
+            <td><strong>send_sms</strong></td>
+            <td>Messaging</td>
+            <td>Dispatches SMS messages to specified contact numbers</td>
+            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
+          </tr>
+          <tr>
+            <td><strong>query_knowledge</strong></td>
+            <td>RAG Vault</td>
+            <td>Searches offline Room Knowledge Vault for matched articles & docs</td>
+            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
+          </tr>
+          <tr>
+            <td><strong>schedule_alarm</strong></td>
+            <td>System Clock</td>
+            <td>Schedules system alarms and timers with hour and minute params</td>
+            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
+          </tr>
+          <tr>
+            <td><strong>set_torch</strong></td>
+            <td>Camera Hardware</td>
+            <td>Toggles Android CameraManager Flashlight on or off</td>
+            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
+          </tr>
+          <tr>
+            <td><strong>synthesize_mcp_skill</strong></td>
+            <td>Autonomous AI</td>
+            <td>Generates and registers dynamic JSON-RPC tools at runtime</td>
+            <td style="color: var(--matrix-cyan);">SYNTHESIZING</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- KNOWLEDGE BASE & RAG VAULT -->
+    <section id="knowledge-vault" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">📚</span>
+        <h2>MATRIX KNOWLEDGE VAULT & RAG RETRIEVAL</h2>
+      </div>
+      <p>
+        The <strong>Matrix Knowledge Base</strong> provides an encrypted, local-first repository for guides, personal documentation, meeting transcripts, system protocols, and code snippets. Agent Smith uses real-time semantic tag querying to pull relevant documentation into conversation context.
+      </p>
+
+      <div class="img-showcase">
+        <img src="file:///android_res/drawable/img_matrix_knowledge_vault_1790314700451.jpg" alt="Matrix Knowledge Vault" onerror="this.src='https://images.unsplash.com/photo-1507842229451-7f01be7fe734?q=80&w=1200'">
+        <div class="img-caption">
+          <span><strong>FIGURE 4.0</strong> // NEURAL RAG VECTOR VAULT & SEMANTIC DOCUMENT REPOSITORY</span>
+          <span class="tag">[OFFLINE FIRST]</span>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <h3>🔍 Instant Keyword & Tag Search</h3>
+          <p>Find articles instantly by typing tags or phrases. Query results are sorted by relevance and pinned priority.</p>
+        </div>
+        <div class="feature-item">
+          <h3>📝 Dynamic Knowledge Ingestion</h3>
+          <p>Add new articles, instructions, or meeting summaries directly from the in-app Knowledge Base Manager or via voice commands.</p>
+        </div>
+        <div class="feature-item">
+          <h3>🤖 Automatic AI Context Injection</h3>
+          <p>When asking technical questions, Agent Smith automatically queries <code>findRelevantKnowledge</code> to ground responses in your saved documents.</p>
+        </div>
+        <div class="feature-item">
+          <h3>🔒 100% On-Device Privacy</h3>
+          <p>All knowledge entities are persisted in the private Room SQLite database on your device with zero cloud leakage.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOCAL SLM BENCHMARKS & SETUP -->
+    <section id="local-slm" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">⚡</span>
+        <h2>2025–2026 LOCAL SLM BENCHMARKS & RUNTIMES</h2>
+      </div>
+      <p>
+        For offline and air-gapped operations, Agent Smith interfaces with cutting-edge Small Language Models (SLMs). Below are benchmark evaluations prioritizing function-calling intelligence, mobile NPU token velocity, and RAM footprint.
+      </p>
+
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Model Designation</th>
+            <th>Parameters</th>
+            <th>BFCL Function Calling</th>
+            <th>Speed (NPU/Mobile)</th>
+            <th>RAM Required</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Qwen 2.5 / 3.5 Instruct</strong></td>
+            <td>1.5B – 4B</td>
+            <td style="color: var(--matrix-green-bright); font-weight: 700;">94.2% (Top Tier)</td>
+            <td>45–65 tok/s</td>
+            <td>1.2GB – 2.4GB</td>
+          </tr>
+          <tr>
+            <td><strong>Google Gemma 4 Edge</strong></td>
+            <td>E2B – E4B</td>
+            <td style="color: var(--matrix-green-bright);">92.8%</td>
+            <td>50–70 tok/s</td>
+            <td>1.5GB – 2.8GB</td>
+          </tr>
+          <tr>
+            <td><strong>Meta Llama 3.2</strong></td>
+            <td>1B – 3B</td>
+            <td>89.5%</td>
+            <td style="color: var(--matrix-cyan);">60–80 tok/s</td>
+            <td>0.9GB – 2.1GB</td>
+          </tr>
+          <tr>
+            <td><strong>Microsoft Phi-4 Mini</strong></td>
+            <td>3.8B</td>
+            <td>91.0%</td>
+            <td>35–50 tok/s</td>
+            <td>2.4GB (8GB+ RAM)</td>
+          </tr>
+          <tr>
+            <td><strong>DeepSeek-R1 Distill Qwen</strong></td>
+            <td>1.5B – 7B</td>
+            <td>88.4% (Reasoning)</td>
+            <td>30–45 tok/s</td>
+            <td>1.4GB – 4.2GB</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- INSTALLATION & SETUP GUIDE -->
+    <section id="installation" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">⚙️</span>
+        <h2>INSTALLATION, PERMISSIONS & RUNTIME SETUP</h2>
+      </div>
+
+      <h3 style="color: var(--matrix-green); margin-bottom: 12px;">Method A: Google AI Studio Cloud Engine (Fastest)</h3>
+      <ol class="step-list">
+        <li>Obtain your API Key from the <strong>Google AI Studio Dashboard</strong> (<a href="https://aistudio.google.com" target="_blank" style="color: var(--matrix-cyan);">aistudio.google.com</a>).</li>
+        <li>Open the <strong>Secrets Panel</strong> in AI Studio and configure <code>GEMINI_API_KEY</code>.</li>
+        <li>Launch the app. If the AI Core Initialization Gate appears, tap <strong>ACTIVATE GEMINI CLOUD ENGINE</strong>.</li>
+      </ol>
+
+      <h3 style="color: var(--matrix-green); margin-bottom: 12px; margin-top: 24px;">Method B: Local On-Device SLM (Ollama / Termux / ExecuTorch)</h3>
+      <div class="terminal-box">
+        <div class="terminal-header">
+          <span>TERMUX ON-DEVICE SLM INSTALLATION SCRIPT</span>
+          <span>BASH</span>
+        </div>
+        <pre><code class="cmd-prompt"># 1. Update Termux environment
+<span class="cmd-out">pkg update && pkg upgrade -y
+pkg install curl git clang -y</span>
+
+# 2. Install and launch Ollama on Android
+<span class="cmd-out">curl -fsSL https://ollama.com/install.sh | sh
+ollama serve &</span>
+
+# 3. Pull Qwen 2.5 1.5B with high-speed 4-bit quantization
+<span class="cmd-out">ollama pull qwen2.5:1.5b</span>
+
+# 4. Agent Smith automatically connects to http://127.0.0.1:11434</span></code></pre>
+      </div>
+
+      <h3 style="color: var(--matrix-green); margin: 20px 0 10px 0;">Required Android Permissions:</h3>
+      <ul style="margin-left: 24px; color: var(--matrix-text); font-family: var(--font-sans); font-size: 0.9rem;">
+        <li><code>RECORD_AUDIO</code>: Live microphone task issuance & speech synthesis.</li>
+        <li><code>CALL_PHONE</code>: Direct autonomous phone call execution.</li>
+        <li><code>ACCESS_FINE_LOCATION</code>: Local weather, map coordinates, and proximity lookups.</li>
+        <li><code>SEND_SMS</code> & <code>READ_CONTACTS</code>: Autonomous messaging dispatch.</li>
+      </ul>
+    </section>
+
+    <!-- REAL-WORLD USE CASES -->
+    <section id="use-cases" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">🎯</span>
+        <h2>REAL-WORLD OPERATOR USE CASES</h2>
+      </div>
+
+      <div class="use-case-card">
+        <h3><span>🍽️ USE CASE 1:</span> Automated Restaurant Table Reservation <span class="flow-badge">VOICE + PHONE</span></h3>
+        <p><strong>Goal:</strong> Secure an outdoor table for 4 at <em>BlueFin Sushi Bistro</em> for Friday at 7:00 PM without manual calling.</p>
+        <div class="terminal-box">
+          <div class="cmd-prompt">> USER VOICE PROMPT:</div>
+          <div class="cmd-out">"Smith, call BlueFin Sushi at 555-8392. Reserve a quiet outdoor table for 4 this Friday at 7 PM under Thomas."</div>
+          <div class="cmd-prompt">> AGENT SMITH REASONING:</div>
+          <div class="cmd-out">"Synthesizing reservation mission parameters. Contact: BlueFin Sushi (555-8392). Objective: 4 guests, patio seating, 19:00 Friday. Generating structured call dispatch."</div>
+        </div>
+        <p>Smith creates a live <code>PhoneCallAgentCard</code>, dials the restaurant, parses the host's responses, confirms the reservation, and stores the booking confirmation in the Room database.</p>
+      </div>
+
+      <div class="use-case-card">
+        <h3><span>🛠️ USE CASE 2:</span> Dynamic Flight Tracker MCP Tool Synthesis <span class="flow-badge">AUTONOMOUS MCP</span></h3>
+        <p><strong>Goal:</strong> User asks for flight status: <em>"Track flight UA428 from SFO to JFK."</em></p>
+        <p>Smith detects no pre-existing flight tool in the registry, autonomously writes and compiles the MCP schema for <code>track_flight(flight_number, origin, dest)</code>, saves it to <code>SkillDao</code>, and queries the aviation API.</p>
+      </div>
+
+      <div class="use-case-card">
+        <h3><span>⚡ USE CASE 4:</span> Sub-Agent Priority Queue & Urgency Boost <span class="flow-badge">PRIORITY QUEUE</span></h3>
+        <p><strong>Goal:</strong> Manually boost the priority of urgent tasks across active sub-agent nodes.</p>
+        <p>Launch Command: <a href="command:/subagents" style="color: var(--matrix-green-bright); font-weight: bold;">/subagents</a>. Tap <strong>⚡ BOOST</strong> on any sub-agent card to promote its priority level to <code>CRITICAL</code> (Red/Pink Badge), instantly re-sorting the active execution queue and triggering a high-tech rising chime audio feedback.</p>
+      </div>
+
+      <div class="use-case-card">
+        <h3><span>🔊 USE CASE 5:</span> Movie-Themed Audio Feedback & Sound FX <span class="flow-badge">AUDIO ENGINE</span></h3>
+        <p><strong>Goal:</strong> Customize audio feedback volume and frequency for Matrix UI actions.</p>
+        <p>Launch Command: <a href="command:/options" style="color: var(--matrix-green-bright); font-weight: bold;">/options</a>. Adjust sound FX volume (0% to 100%), frequency modes (<code>ALL_ACTIONS</code>, <code>CRITICAL_ONLY</code>, <code>MUTED</code>), and preview synthesized movie sound effects (keystrokes, priority boost chimes, swarm warp tones, telecom dialing, and glitch alerts).</p>
+      </div>
+
+      <div class="use-case-card">
+        <h3><span>🔮 USE CASE 6:</span> Temporal Pre-Cognition Workflow Engine <span class="flow-badge">PRE-COGNITION</span></h3>
+        <p><strong>Goal:</strong> Anticipate user directives based on time of day, memories, and battery context.</p>
+        <p>Launch Command: <a href="command:/precog" style="color: var(--matrix-green-bright); font-weight: bold;">/precog</a>. Generates real-time predictions with confidence scores and 1-tap pre-cognitive execution triggers.</p>
+      </div>
+
+      <div class="use-case-card">
+        <h3><span>📞 USE CASE 7:</span> Ghost Operator Background Phone Bridge <span class="flow-badge">GHOST CALL</span></h3>
+        <p><strong>Goal:</strong> Execute background telephone calls, navigate IVR trees, and negotiate reservations automatically.</p>
+        <p>Launch Command: <a href="command:/ghostcall" style="color: var(--matrix-green-bright); font-weight: bold;">/ghostcall</a>. Dials via zero-latency SIP bridge, transmits DTMF tones, speaks with human receptionists, confirms bookings, and logs transcripts to Room SQLite.</p>
+      </div>
+
+      <div class="use-case-card">
+        <h3><span>🌙 USE CASE 8:</span> Proactive Sentinel 'Deep Sleep' Mode <span class="flow-badge">RESOURCE OPTIMIZATION</span></h3>
+        <p><strong>Goal:</strong> Optimize mobile battery life and RAM utilization during continuous background listening.</p>
+        <p>Launch Command: <a href="command:/deepsleep" style="color: var(--matrix-green-bright); font-weight: bold;">/deepsleep</a> or <a href="command:/flush" style="color: var(--matrix-green-bright); font-weight: bold;">/flush</a>. Toggles periodic 30-second short-term audio buffer memory purges, preventing memory leaks while retaining proactive intelligence capability.</p>
+      </div>
+
+      <div class="use-case-card">
+        <h3><span>🎙️ USE CASE 9:</span> Customizable Local Wake-Word Trigger Mechanism <span class="flow-badge">TRIGGER PHRASE</span></h3>
+        <p><strong>Goal:</strong> Customize the exact trigger phrase that activates proactive agent directives beyond always-on listening mode.</p>
+        <p>Launch Command: <a href="command:/wakeword" style="color: var(--matrix-green-bright); font-weight: bold;">/wakeword</a> or <a href="command:/sentinel" style="color: var(--matrix-green-bright); font-weight: bold;">/sentinel</a>. Set your custom trigger phrase (e.g., <code>Agent Smith</code>, <code>Hey Smith</code>, <code>Computer</code>, <code>Jarvis</code>) and adjust detection sensitivity (High, Medium, Strict) for targeted voice activation.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <div>⚡ MATRIX AGENT SMITH OPERATOR MANUAL // SYSTEM SPECIFICATION v3.5</div>
+    <div style="margin-top: 6px; color: var(--matrix-muted);">Confidential // Machine Defense Protocol // AI Studio Engine</div>
+  </footer>
+
+  <script>
+    function filterGuide() {
+      const input = document.getElementById('guideSearch').value.toLowerCase();
+      const sections = document.querySelectorAll('.section-card, .use-case-card');
+      
+      sections.forEach(sec => {
+        const text = sec.innerText.toLowerCase();
+        if (text.includes(input)) {
+          sec.style.display = 'block';
+        } else {
+          sec.style.display = 'none';
+        }
+      });
+    }
+
+    // Smooth scroll for nav links
+    document.querySelectorAll('nav a').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href').substring(1);
+        const targetElem = document.getElementById(targetId);
+        if (targetElem) {
+          targetElem.scrollIntoView({ behavior: 'smooth' });
+          document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+          this.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
