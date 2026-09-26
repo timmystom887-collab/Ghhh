@@ -147,6 +147,21 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     val activeModel = repository.preferencesManager.activeModel
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "gemini-3.5-flash")
 
+    val preThoughtModel = repository.preferencesManager.preThoughtModel
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Google Gemini (gemini-3.5-flash)")
+
+    val coreReasoningModel = repository.preferencesManager.coreReasoningModel
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Google Gemini (gemini-3.5-flash)")
+
+    val toolExecutionModel = repository.preferencesManager.toolExecutionModel
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Google Gemini (gemini-3.5-flash)")
+
+    val proactiveAnalysisModel = repository.preferencesManager.proactiveAnalysisModel
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Local SLM (Qwen 2.5 1.5B)")
+
+    val downloadedLocalModels = repository.preferencesManager.downloadedLocalModels
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Qwen 2.5 / 3.5 Instruct,Meta Llama 3.2")
+
     val groqApiKey = repository.preferencesManager.groqApiKey
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
 
@@ -1330,6 +1345,40 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.preferencesManager.setActiveProviderAndModel(provider, model)
             repository.insertMessage(MessageEntity(sender = "system", content = "⚡ Active Model Provider switched to $provider ($model)"))
+        }
+    }
+
+    fun setProcessRoutingModel(processKey: String, modelName: String) {
+        viewModelScope.launch {
+            repository.preferencesManager.setProcessRoutingModel(processKey, modelName)
+            repository.insertMessage(MessageEntity(sender = "system", content = "🎯 Process [${processKey}] successfully routed to: $modelName"))
+        }
+    }
+
+    fun addDownloadedLocalModel(modelName: String) {
+        viewModelScope.launch {
+            repository.preferencesManager.addDownloadedLocalModel(modelName)
+            repository.insertMessage(MessageEntity(sender = "system", content = "💾 Local AI model successfully compiled & installed to on-device neural cache: $modelName"))
+        }
+    }
+
+    fun triggerModelDownloadWork(modelName: String, modelId: String) {
+        viewModelScope.launch {
+            val workManager = androidx.work.WorkManager.getInstance(getApplication())
+            val inputData = androidx.work.workDataOf(
+                "model_name" to modelName,
+                "model_id" to modelId
+            )
+            val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.example.agent.service.ModelDownloadWorker>()
+                .setInputData(inputData)
+                .addTag("MODEL_DOWNLOAD_$modelId")
+                .build()
+
+            workManager.enqueueUniqueWork(
+                "DOWNLOAD_$modelId",
+                androidx.work.ExistingWorkPolicy.REPLACE,
+                workRequest
+            )
         }
     }
 

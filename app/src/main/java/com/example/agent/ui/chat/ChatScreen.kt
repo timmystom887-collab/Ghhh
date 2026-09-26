@@ -126,6 +126,11 @@ fun ChatScreen(
     val isAiCoreActive by viewModel.isAiCoreActive.collectAsState()
     val activeProvider by viewModel.activeProvider.collectAsState()
     val activeModel by viewModel.activeModel.collectAsState()
+    val preThoughtModel by viewModel.preThoughtModel.collectAsState()
+    val coreReasoningModel by viewModel.coreReasoningModel.collectAsState()
+    val toolExecutionModel by viewModel.toolExecutionModel.collectAsState()
+    val proactiveAnalysisModel by viewModel.proactiveAnalysisModel.collectAsState()
+    val downloadedLocalModels by viewModel.downloadedLocalModels.collectAsState()
     val groqKey by viewModel.groqApiKey.collectAsState()
     val openrouterKey by viewModel.openrouterApiKey.collectAsState()
     val hfKey by viewModel.huggingfaceApiKey.collectAsState()
@@ -606,6 +611,13 @@ fun ChatScreen(
                                     onExecuteTool = { toolName -> viewModel.executeMcpTool(toolName) }
                                 )
                                 "slms_guide" -> LocalModelsGuideCard(
+                                    downloadedModels = downloadedLocalModels,
+                                    preThoughtModel = preThoughtModel,
+                                    coreReasoningModel = coreReasoningModel,
+                                    toolExecutionModel = toolExecutionModel,
+                                    proactiveAnalysisModel = proactiveAnalysisModel,
+                                    onDownloadModel = { modelName, modelId -> viewModel.triggerModelDownloadWork(modelName, modelId) },
+                                    onAssignRouting = { key, modelName -> viewModel.setProcessRoutingModel(key, modelName) },
                                     onSelectModel = { modelName -> viewModel.updatePreferences("Local SLM", modelName) }
                                 )
                                 "thinking_methods", "cognitive_frameworks" -> com.example.agent.ui.chat.components.ThinkingMethodsCard(

@@ -61,6 +61,57 @@ class PreferencesManager(private val context: Context) {
         // Cognitive Thinking Framework & Reasoning Protocol
         val ACTIVE_THINKING_METHOD = stringPreferencesKey("active_thinking_method")
         val THINKING_LEVEL = stringPreferencesKey("thinking_level")
+
+        // Process-specific reasoning model routing preferences
+        val PRE_THOUGHT_MODEL = stringPreferencesKey("pre_thought_model")
+        val CORE_REASONING_MODEL = stringPreferencesKey("core_reasoning_model")
+        val TOOL_EXECUTION_MODEL = stringPreferencesKey("tool_execution_model")
+        val PROACTIVE_ANALYSIS_MODEL = stringPreferencesKey("proactive_analysis_model")
+
+        // Downloaded local SLM inventory tracking
+        val DOWNLOADED_LOCAL_MODELS = stringPreferencesKey("downloaded_local_models")
+    }
+
+    val preThoughtModel: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PRE_THOUGHT_MODEL] ?: "Google Gemini (gemini-3.5-flash)"
+    }
+
+    val coreReasoningModel: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[CORE_REASONING_MODEL] ?: "Google Gemini (gemini-3.5-flash)"
+    }
+
+    val toolExecutionModel: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[TOOL_EXECUTION_MODEL] ?: "Google Gemini (gemini-3.5-flash)"
+    }
+
+    val proactiveAnalysisModel: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PROACTIVE_ANALYSIS_MODEL] ?: "Local SLM (Qwen 2.5 1.5B)"
+    }
+
+    val downloadedLocalModels: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[DOWNLOADED_LOCAL_MODELS] ?: "Qwen 2.5 / 3.5 Instruct,Meta Llama 3.2"
+    }
+
+    suspend fun setProcessRoutingModel(processKey: String, modelName: String) {
+        context.dataStore.edit { preferences ->
+            when (processKey) {
+                "PRE_THOUGHT" -> preferences[PRE_THOUGHT_MODEL] = modelName
+                "CORE_REASONING" -> preferences[CORE_REASONING_MODEL] = modelName
+                "TOOL_EXECUTION" -> preferences[TOOL_EXECUTION_MODEL] = modelName
+                "PROACTIVE_ANALYSIS" -> preferences[PROACTIVE_ANALYSIS_MODEL] = modelName
+            }
+        }
+    }
+
+    suspend fun addDownloadedLocalModel(modelName: String) {
+        context.dataStore.edit { preferences ->
+            val current = preferences[DOWNLOADED_LOCAL_MODELS] ?: "Qwen 2.5 / 3.5 Instruct,Meta Llama 3.2"
+            val list = current.split(",").map { it.trim() }.toMutableList()
+            if (!list.contains(modelName)) {
+                list.add(modelName)
+            }
+            preferences[DOWNLOADED_LOCAL_MODELS] = list.joinToString(",")
+        }
     }
 
     val isAiCoreActive: Flow<Boolean> = context.dataStore.data.map { preferences ->
