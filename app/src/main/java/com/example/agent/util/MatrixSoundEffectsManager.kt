@@ -17,7 +17,9 @@ enum class MatrixSoundEffect {
     TELECOM_DIAL,
     SENTINEL_RADAR,
     ALERT_GLITCH,
-    DEEP_SLEEP_FLUSH
+    DEEP_SLEEP_FLUSH,
+    MATRIX_BOOT,
+    SMITH_QUOTE
 }
 
 class MatrixSoundEffectsManager {
@@ -68,6 +70,16 @@ class MatrixSoundEffectsManager {
                     MatrixSoundEffect.DEEP_SLEEP_FLUSH -> {
                         // Soft power down resonance sweep (600Hz -> 200Hz)
                         playPcmSweep(startFreq = 600f, endFreq = 200f, durationMs = 250)
+                    }
+                    MatrixSoundEffect.MATRIX_BOOT -> {
+                        // Deep cinematic Matrix system initialization chord sweep (120Hz -> 440Hz -> 880Hz)
+                        playPcmSweep(startFreq = 120f, endFreq = 440f, durationMs = 300)
+                        kotlinx.coroutines.delay(120)
+                        playPcmSweep(startFreq = 440f, endFreq = 880f, durationMs = 200)
+                    }
+                    MatrixSoundEffect.SMITH_QUOTE -> {
+                        // Resonant harmonic entry tone
+                        playPcmSweep(startFreq = 220f, endFreq = 330f, durationMs = 150)
                     }
                     MatrixSoundEffect.SWARM_REPLICATE -> {
                         playPcmSweep(startFreq = 400f, endFreq = 1200f, durationMs = 200)

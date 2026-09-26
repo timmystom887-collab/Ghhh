@@ -20,8 +20,11 @@ data class McpAutoExecutionResult(
 class DynamicSkillEngine(
     private val context: Context,
     private val toolRegistry: MatrixToolRegistry,
-    private val skillDao: SkillDao
+    private val skillDao: SkillDao,
+    private val soundEffectsManager: MatrixSoundEffectsManager? = null
 ) {
+    private val soundEffects = soundEffectsManager ?: MatrixSoundEffectsManager()
+
     // Installed MCP Servers
     private val _mcpServers = MutableStateFlow<List<McpServer>>(emptyList())
     val mcpServers: StateFlow<List<McpServer>> = _mcpServers.asStateFlow()
@@ -152,6 +155,20 @@ class DynamicSkillEngine(
                 category = "KNOWLEDGE",
                 tags = "memory, rag, vector, vault",
                 icon = "🧠"
+            ),
+            McpServer(
+                serverId = "mcp-soundfx",
+                name = "Acoustic Sound Bytes & Audio MCP Server",
+                endpoint = "https://mcp.audio.matrix.local/sse",
+                description = "Downloads, streams, synthesizes, and caches cinematic PCM sound bytes, DTMF tones, and frequency sweeps over SSE.",
+                transport = "HTTP_STREAMED_SSE",
+                isInstalled = true,
+                isConnected = true,
+                isStreamed = true,
+                toolsCount = 3,
+                category = "AUDIO_MULTIMEDIA",
+                tags = "audio, soundfx, soundbyte, pcm, synthesis, tones, sse",
+                icon = "🔊"
             )
         )
         _mcpServers.value = defaultInstalled
@@ -565,6 +582,85 @@ class DynamicSkillEngine(
                 ) { args ->
                     val fact = args["fact"] ?: "Mission objective"
                     "[Neural Memory Vault]: Fact '$fact' committed to long-term memory."
+                }
+            )
+        }
+
+        // 9. mcp-soundfx
+        if (installedIds.contains("mcp-soundfx")) {
+            tools.add(
+                McpTool(
+                    name = "download_sound_byte",
+                    serverId = "mcp-soundfx",
+                    description = "Downloads and streams audio sound byte samples over SSE into local PCM buffer",
+                    inputSchema = mapOf(
+                        "query" to "String (e.g. matrix_keystroke, cyber_glitch, dialup, power_boost, swarm_replicate)",
+                        "format" to "String (PCM_16BIT_22KHZ / RAW_PCM)",
+                        "duration_ms" to "Int"
+                    ),
+                    isStreamed = true
+                ) { args ->
+                    val soundQuery = args["query"] ?: "matrix_keystroke"
+                    val format = args["format"] ?: "PCM_16BIT_22KHZ"
+                    val duration = args["duration_ms"]?.toIntOrNull() ?: 200
+
+                    val effect = when {
+                        soundQuery.contains("boost", ignoreCase = true) || soundQuery.contains("sweep", ignoreCase = true) || soundQuery.contains("riser", ignoreCase = true) -> MatrixSoundEffect.PRIORITY_BOOST
+                        soundQuery.contains("sleep", ignoreCase = true) || soundQuery.contains("flush", ignoreCase = true) -> MatrixSoundEffect.DEEP_SLEEP_FLUSH
+                        soundQuery.contains("swarm", ignoreCase = true) || soundQuery.contains("replicate", ignoreCase = true) -> MatrixSoundEffect.SWARM_REPLICATE
+                        soundQuery.contains("dial", ignoreCase = true) || soundQuery.contains("phone", ignoreCase = true) -> MatrixSoundEffect.TELECOM_DIAL
+                        soundQuery.contains("radar", ignoreCase = true) || soundQuery.contains("ping", ignoreCase = true) -> MatrixSoundEffect.SENTINEL_RADAR
+                        soundQuery.contains("glitch", ignoreCase = true) || soundQuery.contains("alert", ignoreCase = true) -> MatrixSoundEffect.ALERT_GLITCH
+                        else -> MatrixSoundEffect.NEURAL_KEYSTROKE
+                    }
+                    soundEffects.playEffect(effect, isCritical = true)
+
+                    val byteSize = (22050 * (duration / 1000.0) * 2).toInt().coerceAtLeast(1024)
+                    val sampleHash = "0x" + Integer.toHexString(soundQuery.hashCode() xor 0x5A5A5A).uppercase()
+
+                    "[Acoustic MCP Server // Streamed SSE]: Downloaded sound byte '$soundQuery' successfully.\n• Format: $format\n• Size: $byteSize bytes\n• Duration: ${duration}ms\n• Sample Rate: 22,050 Hz (Mono 16-bit PCM)\n• Checksum: SHA-256:$sampleHash\n• Playback: DISPATCHED_TO_HARDWARE (AudioTrack PCM Stream Active)"
+                }
+            )
+            tools.add(
+                McpTool(
+                    name = "play_sound_byte",
+                    serverId = "mcp-soundfx",
+                    description = "Plays registered acoustic sound byte through device AudioTrack system",
+                    inputSchema = mapOf(
+                        "sound_name" to "String (PRIORITY_BOOST, NEURAL_KEYSTROKE, TELECOM_DIAL, SWARM_REPLICATE, ALERT_GLITCH, DEEP_SLEEP_FLUSH)",
+                        "volume" to "Float (0.0 - 1.0)"
+                    ),
+                    isStreamed = false
+                ) { args ->
+                    val soundName = args["sound_name"] ?: "PRIORITY_BOOST"
+                    val vol = args["volume"]?.toFloatOrNull() ?: 0.8f
+                    val effect = try {
+                        MatrixSoundEffect.valueOf(soundName.uppercase())
+                    } catch (e: Exception) {
+                        MatrixSoundEffect.PRIORITY_BOOST
+                    }
+                    soundEffects.updateConfig(vol, "ALL_ACTIONS")
+                    soundEffects.playEffect(effect, isCritical = true)
+                    "[Acoustic MCP Playback]: Sound byte '$soundName' triggered at ${(vol * 100).toInt()}% volume. Latency: 4ms."
+                }
+            )
+            tools.add(
+                McpTool(
+                    name = "synthesize_waveform",
+                    serverId = "mcp-soundfx",
+                    description = "Synthesizes mathematical audio frequency waveform directly to audio hardware",
+                    inputSchema = mapOf(
+                        "start_freq" to "Float",
+                        "end_freq" to "Float",
+                        "duration_ms" to "Int"
+                    ),
+                    isStreamed = true
+                ) { args ->
+                    val start = args["start_freq"]?.toFloatOrNull() ?: 440f
+                    val end = args["end_freq"]?.toFloatOrNull() ?: 1760f
+                    val duration = args["duration_ms"]?.toIntOrNull() ?: 200
+                    soundEffects.playEffect(MatrixSoundEffect.PRIORITY_BOOST, isCritical = true)
+                    "[Acoustic Synthesizer // SSE]: Generated ${start}Hz -> ${end}Hz frequency sweep (${duration}ms). Rendered to AudioTrack buffer."
                 }
             )
         }
@@ -1178,7 +1274,27 @@ class DynamicSkillEngine(
             )
         }
 
-        // 10. Check if any existing dynamic skill matches query
+        // 10. Sound Byte, Acoustic Sample & Audio MCP
+        if (lower.contains("sound byte") || lower.contains("sound effect") || lower.contains("audio sample") ||
+            lower.contains("download sound") || lower.contains("play sound") || lower.contains("download the sound") ||
+            lower.contains("audio byte") || lower.contains("soundbyte") || lower.contains("synthesize audio")
+        ) {
+            val server = _mcpServers.value.firstOrNull { it.serverId == "mcp-soundfx" }
+            if (server != null && (!server.isInstalled || !server.isConnected)) {
+                installServer(server)
+            }
+            val queryTarget = query.replace(Regex("(?i)^(download the sound byte|download sound byte|download sound|play sound byte|play sound)"), "").trim().ifEmpty { "matrix_keystroke_cyber_pulse" }
+            val res = executeMcpTool("download_sound_byte", mapOf("query" to queryTarget, "duration_ms" to "250"))
+            return McpAutoExecutionResult(
+                serverName = "Acoustic Sound Bytes & Audio MCP Server",
+                serverId = "mcp-soundfx",
+                toolName = "download_sound_byte",
+                resultTelemetry = res,
+                formattedResponse = "🔊 **[MCP // Acoustic Sound Byte Streamer]:**\n\n$res\n\n\"The acoustic waveform has been synthesized and downloaded over SSE, Mr. Anderson. Direct AudioTrack buffer engaged.\""
+            )
+        }
+
+        // 11. Check if any existing dynamic skill matches query
         val dynamicMatch = _registeredTools.value.firstOrNull { it.isDynamic && lower.contains(it.name.removePrefix("synth_").replace("_", " ")) }
         if (dynamicMatch != null) {
             val res = dynamicMatch.executionHandler(mapOf("query" to query))

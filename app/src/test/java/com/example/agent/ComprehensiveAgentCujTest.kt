@@ -161,6 +161,19 @@ class ComprehensiveAgentCujTest {
         // Reset to defaults
         viewModel.resetMcpServersToDefaults()
         assertTrue(engine.mcpServers.value.any { it.serverId == "mcp-brave" })
+        assertTrue(engine.mcpServers.value.any { it.serverId == "mcp-soundfx" })
+
+        // Execute download_sound_byte tool
+        val downloadResult = engine.executeMcpTool("download_sound_byte", mapOf("query" to "matrix_keystroke_cyber_pulse", "duration_ms" to "250"))
+        assertTrue(downloadResult.contains("Downloaded sound byte"))
+        assertTrue(downloadResult.contains("PCM"))
+
+        // Test auto execution on sound byte query
+        val autoResult = engine.detectAndAutoExecuteMcp("Download the sound byte use an mcp server if needed")
+        assertNotNull(autoResult)
+        assertEquals("mcp-soundfx", autoResult!!.serverId)
+        assertEquals("download_sound_byte", autoResult.toolName)
+        assertTrue(autoResult.resultTelemetry.contains("Downloaded sound byte"))
     }
 
     @Test

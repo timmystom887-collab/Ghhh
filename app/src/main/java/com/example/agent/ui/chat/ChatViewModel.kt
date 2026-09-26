@@ -50,11 +50,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val ttsManager = TtsManager(application)
     private val batteryMonitor = BatteryMonitorService(application)
     private val toolRegistry = MatrixToolRegistry(application)
-    val dynamicSkillEngine = DynamicSkillEngine(application, toolRegistry, skillDao)
+    val soundEffectsManager = MatrixSoundEffectsManager()
+    val dynamicSkillEngine = DynamicSkillEngine(application, toolRegistry, skillDao, soundEffectsManager)
     val proactiveCognitionEngine = ProactiveCognitionEngine(application, database)
     val ghostPhoneBridge = GhostOperatorPhoneBridge(application, callLogDao, memoryDao, ttsManager)
     val preCognitionEngine = PreCognitionEngine(application, database)
-    val soundEffectsManager = MatrixSoundEffectsManager()
     val thinkingMethodEngine = com.example.agent.util.ThinkingMethodEngine(application)
     val automatedSystemEngine = com.example.agent.util.AutomatedSystemEngine(application, database)
 
