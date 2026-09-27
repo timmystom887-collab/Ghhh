@@ -61,6 +61,7 @@ fun OptionsMenuCard(
     charMesExample: String = AgentSmithCharacterCard.MES_EXAMPLE,
     soundFxVolume: Double = 0.8,
     soundFxFrequency: String = "ALL_ACTIONS",
+    providerModels: List<Pair<String, String>> = emptyList(),
     onSaveKeys: (gemini: String, groq: String, openrouter: String, hf: String, mistral: String, together: String, cohere: String, openai: String, anthropic: String) -> Unit,
     onSaveCharacter: (name: String, personality: String, tone: String) -> Unit,
     onSaveCharacterV2: (name: String, description: String, personality: String, scenario: String, firstMessage: String, mesExample: String, tone: String) -> Unit = { _, _, _, _, _, _, _ -> },
@@ -79,12 +80,12 @@ fun OptionsMenuCard(
     var geminiInput by remember { mutableStateOf("") }
     var groqInput by remember { mutableStateOf(groqKey) }
     var openrouterInput by remember { mutableStateOf(openrouterKey) }
-    var hfInput by remember { mutableStateOf(huggingfaceKey) }
+    var hfInput by remember { mutableStateOf("") }
     var mistralInput by remember { mutableStateOf("") }
     var togetherInput by remember { mutableStateOf("") }
     var cohereInput by remember { mutableStateOf("") }
-    var openaiInput by remember { mutableStateOf(openaiKey) }
-    var anthropicInput by remember { mutableStateOf(anthropicKey) }
+    var openaiInput by remember { mutableStateOf("") }
+    var anthropicInput by remember { mutableStateOf("") }
 
     // Character Card v2 State
     var nameInput by remember { mutableStateOf(charName) }
@@ -101,13 +102,8 @@ fun OptionsMenuCard(
         "Google Gemini" to "Free Tier (Built-in)",
         "Groq" to "Free Ultra-Fast Tier",
         "OpenRouter" to "Free Models Hub",
-        "Hugging Face" to "Free Inference API",
-        "Mistral AI" to "Free Dev Tier",
-        "Cohere" to "Free Dev Tier",
-        "Together AI" to "Trial Tier",
-        "OpenAI" to "GPT-4o / o3-mini",
-        "Anthropic" to "Claude 3.5 Sonnet",
-        "Local SLM" to "100% Free & Offline"
+        "Local SLM" to "100% Free & Offline (Qwen 3 Q 1.7B)",
+        "Multi-API" to "Distributed Concurrent Tri-Grid"
     )
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
@@ -183,10 +179,33 @@ fun OptionsMenuCard(
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
         ) {
-            val models = listOf(
-                "gemini-3.5-flash" to "Gemini 3.5 Flash (Frontier Default)",
-                "gemini-3.1-pro-preview" to "Gemini 3.1 Pro (Deep STEM Reasoning)"
-            )
+            val models = if (providerModels.isNotEmpty() && selectedProvider == currentProvider) {
+                providerModels
+            } else {
+                when (selectedProvider) {
+                    "Google Gemini" -> listOf(
+                        "models/gemini-2.5-flash" to "gemini-2.5-flash (Standard)",
+                        "models/gemini-2.5-pro" to "gemini-2.5-pro (Advanced)",
+                        "models/gemini-1.5-flash" to "gemini-1.5-flash (Fast)",
+                        "models/gemini-1.5-pro" to "gemini-1.5-pro (High intelligence)"
+                    )
+                    "Groq" -> listOf(
+                        "llama-3.3-70b-versatile" to "llama-3.3-70b-versatile (Default)",
+                        "llama-3.1-8b-instant" to "llama-3.1-8b-instant (Fast)",
+                        "mixtral-8x7b-32768" to "mixtral-8x7b-32768 (MoE)",
+                        "gemma2-9b-it" to "gemma2-9b-it (Google Core)"
+                    )
+                    "OpenRouter" -> listOf(
+                        "meta-llama/llama-3.3-70b-instruct:free" to "Llama 3.3 70B Instruct (Free)",
+                        "deepseek/deepseek-r1:free" to "DeepSeek R1 (Free)",
+                        "qwen/qwen-2.5-72b-instruct:free" to "Qwen 2.5 72B (Free)",
+                        "google/gemma-2-9b-it:free" to "Gemma 2 9B (Free)"
+                    )
+                    else -> listOf(
+                        "qwen_3_q_1_7b" to "Qwen 3 Q 1.7B (Pre-installed)"
+                    )
+                }
+            }
             models.forEach { (modId, modLabel) ->
                 FilterChip(
                     selected = currentModel == modId,
@@ -229,46 +248,16 @@ fun OptionsMenuCard(
             colors = textFieldColors,
             singleLine = true
         )
-        Spacer(modifier = Modifier.height(6.dp))
-
-        OutlinedTextField(
-            value = hfInput,
-            onValueChange = { hfInput = it },
-            label = { Text("Hugging Face Token (Free: huggingface.co)") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = textFieldColors,
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-
-        OutlinedTextField(
-            value = openaiInput,
-            onValueChange = { openaiInput = it },
-            label = { Text("OpenAI API Key (GPT-4o)") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = textFieldColors,
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-
-        OutlinedTextField(
-            value = anthropicInput,
-            onValueChange = { anthropicInput = it },
-            label = { Text("Anthropic API Key (Claude)") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = textFieldColors,
-            singleLine = true
-        )
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = {
-                onSaveKeys(geminiInput, groqInput, openrouterInput, hfInput, mistralInput, togetherInput, cohereInput, openaiInput, anthropicInput)
+                onSaveKeys(geminiInput, groqInput, openrouterInput, "", "", "", "", "", "")
             },
             colors = ButtonDefaults.buttonColors(containerColor = MatrixGreenPrimary, contentColor = MatrixBlack),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Save All AI Credentials to Secure DataStore")
+            Text(text = "Save Credentials to Secure DataStore")
         }
 
         Spacer(modifier = Modifier.height(18.dp))

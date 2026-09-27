@@ -25,3 +25,16 @@ data class McpTool(
     val isStreamed: Boolean = false,
     val executionHandler: suspend (Map<String, String>) -> String
 )
+
+data class McpWebRepository(
+    val id: String,
+    val name: String,
+    val fullName: String,
+    val htmlUrl: String,
+    val description: String,
+    val stars: Int,
+    val suggestedStreamEndpoint: String,
+    val detectedTools: List<String> = emptyList(),
+    val category: String = "COMMUNITY",
+    val isStreamReady: Boolean = true
+)

@@ -85,11 +85,11 @@ class PreferencesManager(private val context: Context) {
     }
 
     val proactiveAnalysisModel: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[PROACTIVE_ANALYSIS_MODEL] ?: "Local SLM (Qwen 2.5 1.5B)"
+        preferences[PROACTIVE_ANALYSIS_MODEL] ?: "Qwen 3 Q 1.7B (Pre-installed)"
     }
 
     val downloadedLocalModels: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[DOWNLOADED_LOCAL_MODELS] ?: "Qwen 2.5 / 3.5 Instruct,Meta Llama 3.2"
+        preferences[DOWNLOADED_LOCAL_MODELS] ?: "qwen_3_q_1_7b"
     }
 
     suspend fun setProcessRoutingModel(processKey: String, modelName: String) {
@@ -105,7 +105,7 @@ class PreferencesManager(private val context: Context) {
 
     suspend fun addDownloadedLocalModel(modelName: String) {
         context.dataStore.edit { preferences ->
-            val current = preferences[DOWNLOADED_LOCAL_MODELS] ?: "Qwen 2.5 / 3.5 Instruct,Meta Llama 3.2"
+            val current = preferences[DOWNLOADED_LOCAL_MODELS] ?: "qwen_3_q_1_7b"
             val list = current.split(",").map { it.trim() }.toMutableList()
             if (!list.contains(modelName)) {
                 list.add(modelName)

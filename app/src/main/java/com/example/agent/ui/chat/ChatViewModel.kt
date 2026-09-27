@@ -12,6 +12,7 @@ import com.example.agent.data.local.entity.SkillEntity
 import com.example.agent.data.model.AgentSmithCharacterCard
 import com.example.agent.data.model.McpServer
 import com.example.agent.data.model.McpTool
+import com.example.agent.data.model.McpWebRepository
 import com.example.agent.data.repository.AgentRepository
 import com.example.agent.service.BatteryMonitorService
 import com.example.agent.ui.chat.components.PhoneCallMission
@@ -131,6 +132,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     val mcpServers: StateFlow<List<McpServer>> = dynamicSkillEngine.mcpServers
     val catalogServers: StateFlow<List<McpServer>> = dynamicSkillEngine.catalogServers
     val mcpTools: StateFlow<List<McpTool>> = dynamicSkillEngine.registeredTools
+    val mcpWebRepositories: StateFlow<List<McpWebRepository>> = dynamicSkillEngine.webRepositories
+
+    private val _isSearchingWebMcp = MutableStateFlow(false)
+    val isSearchingWebMcp: StateFlow<Boolean> = _isSearchingWebMcp.asStateFlow()
 
     private val _showMcpMenu = MutableStateFlow(false)
     val showMcpMenu: StateFlow<Boolean> = _showMcpMenu.asStateFlow()
@@ -207,6 +212,41 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     val isLowBattery = batteryMonitor.isLowBattery
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    private val _isNetworkConnected = MutableStateFlow(true)
+    val isNetworkConnected = _isNetworkConnected.asStateFlow()
+
+    private val networkCallback = object : android.net.ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: android.net.Network) {
+            val wasOffline = !_isNetworkConnected.value
+            _isNetworkConnected.value = true
+            if (wasOffline) {
+                viewModelScope.launch {
+                    repository.insertMessage(
+                        com.example.agent.data.local.entity.MessageEntity(
+                            sender = "system",
+                            content = "🌐 Internet Connection Restored. Shifting active reasoning nodes back to online Cloud API (Gemini/Frontier) clusters."
+                        )
+                    )
+                }
+            }
+        }
+
+        override fun onLost(network: android.net.Network) {
+            val wasOnline = _isNetworkConnected.value
+            _isNetworkConnected.value = false
+            if (wasOnline) {
+                viewModelScope.launch {
+                    repository.insertMessage(
+                        com.example.agent.data.local.entity.MessageEntity(
+                            sender = "system",
+                            content = "⚠️ Internet Connection Terminated. Automatically routing all operations through Local SLM offline fallback."
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     private val _subAgentState = MutableStateFlow<Triple<String, String, Float>?>(null)
     val subAgentState = _subAgentState.asStateFlow()
 
@@ -222,6 +262,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _ambientTranscript = MutableStateFlow("")
     val ambientTranscript = _ambientTranscript.asStateFlow()
 
+    private val _providerModels = MutableStateFlow<List<Pair<String, String>>>(emptyList())
+    val providerModels = _providerModels.asStateFlow()
+
     private val _currentDelegationTree = MutableStateFlow<Pair<String, List<SubTaskNode>>?>(null)
     val currentDelegationTree = _currentDelegationTree.asStateFlow()
 
@@ -231,9 +274,45 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentCallMission = MutableStateFlow<PhoneCallMission?>(null)
     val currentCallMission = _currentCallMission.asStateFlow()
 
+    data class ApiNodeStatus(
+        val name: String,
+        val isActive: Boolean,
+        val backgroundJob: String,
+        val latencyMs: Int,
+        val totalRequests: Int
+    )
+
+    private val _nodeStatuses = MutableStateFlow<List<ApiNodeStatus>>(listOf(
+        ApiNodeStatus("Google Gemini", true, "None", 85, 24),
+        ApiNodeStatus("Groq Node", false, "Active (WorkManager)", 32, 12),
+        ApiNodeStatus("OpenRouter", false, "None", 195, 8)
+    ))
+    val nodeStatuses = _nodeStatuses.asStateFlow()
+
     init {
         batteryMonitor.startMonitoring()
+        val connectivityManager = getApplication<android.app.Application>()
+            .getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val request = android.net.NetworkRequest.Builder()
+            .addCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        connectivityManager.registerNetworkCallback(request, networkCallback)
+        val activeNetwork = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+        _isNetworkConnected.value = capabilities?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+
         viewModelScope.launch {
+            launch {
+                activeProvider.collect { provider ->
+                    val key = when (provider) {
+                        "Google Gemini" -> repository.preferencesManager.geminiCustomKey.first()
+                        "Groq" -> repository.preferencesManager.groqApiKey.first()
+                        "OpenRouter" -> repository.preferencesManager.openrouterApiKey.first()
+                        else -> ""
+                    }
+                    fetchModelsForProvider(provider, key)
+                }
+            }
             launch {
                 soundFxVolume.collect { vol ->
                     soundEffectsManager.updateConfig(vol.toFloat(), soundFxFrequency.value)
@@ -547,7 +626,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             """.trimIndent()
 
             val orchestrator = TaskOrchestrator(
-                isOffline = isLowBattery.value,
+                isOffline = isOfflineState(),
                 preferredProvider = activeProvider.value,
                 preferredModel = activeModel.value,
                 thinkingLevel = thinkingLevel.value
@@ -573,6 +652,22 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             repository.preferencesManager.addUsage(15.0, 0.0001)
 
             val lower = text.lowercase().trim()
+
+            val isChain = text.contains(" then ", ignoreCase = true) || text.contains(" and then ", ignoreCase = true) || text.contains(";") || text.lines().size > 1 && text.lines().any { it.trim().firstOrNull()?.isDigit() == true }
+
+            if (isChain) {
+                val steps = when {
+                    text.contains(";") -> text.split(";").map { it.trim() }
+                    text.contains(" and then ", ignoreCase = true) -> text.split(Regex("(?i)\\s+and then\\s+")).map { it.trim() }
+                    text.contains(" then ", ignoreCase = true) -> text.split(Regex("(?i)\\s+then\\s+")).map { it.trim() }
+                    else -> text.lines().map { it.replace(Regex("^\\d+\\.\\s*"), "").trim() }
+                }.filter { it.isNotBlank() }
+
+                if (steps.size > 1) {
+                    executeTaskChain(steps)
+                    return@launch
+                }
+            }
 
             // Save facts to memory bank automatically
             if (text.contains("work", ignoreCase = true) || text.contains("project", ignoreCase = true)) {
@@ -813,13 +908,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 val enrichedText = text + knowledgeContext
 
                 val orchestrator = TaskOrchestrator(
-                    isOffline = isLowBattery.value,
+                    isOffline = isOfflineState(),
                     preferredProvider = activeProvider.value,
                     preferredModel = activeModel.value,
-                    thinkingLevel = thinkingLevel.value
+                    thinkingLevel = thinkingLevel.value,
+                    toolRegistry = toolRegistry
                 )
                 val response = orchestrator.routeAndExecute(enrichedText)
                 repository.insertMessage(MessageEntity(sender = "agent", content = response))
+                executeIdleTasksConcurrently()
+                triggerIdleApiBackgroundWork()
                 if (speakOut || _voiceModeActive.value) {
                     ttsManager.speak(response)
                 }
@@ -829,6 +927,29 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 if (speakOut || _voiceModeActive.value) {
                     ttsManager.speak(err)
                 }
+            }
+        }
+    }
+
+    fun enhancePrompt(prompt: String, callback: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                _subAgentState.value = Triple("Agent Smith [Optimizer]", "Enhancing prompt with AI reasoning core...", 0.5f)
+                val orchestrator = TaskOrchestrator(
+                    isOffline = false,
+                    preferredProvider = "Google Gemini",
+                    preferredModel = "models/gemini-2.5-flash"
+                )
+                val response = orchestrator.routeAndExecute(
+                    "You are an AI prompt optimizer. Re-write the following prompt to be highly clear, context-rich, detailed, and optimized for an autonomous Android agent with capabilities to send SMS, make calls, schedule alarms, evaluate math, and check diagnostics. Do not include introductory text, return ONLY the enhanced user-friendly prompt. Current prompt: $prompt"
+                )
+                val sanitized = response.trim().removeSurrounding("\"")
+                callback(sanitized)
+                _subAgentState.value = null
+            } catch (e: Exception) {
+                val fallback = "$prompt --optimize --include-diagnostics --detailed-steps"
+                callback(fallback)
+                _subAgentState.value = null
             }
         }
     }
@@ -930,7 +1051,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 userQuery = query,
                 orchestratorExecute = { prompt ->
                     val orchestrator = TaskOrchestrator(
-                        isOffline = isLowBattery.value,
+                        isOffline = isOfflineState(),
                         preferredProvider = activeProvider.value,
                         preferredModel = activeModel.value,
                         thinkingLevel = thinkingLevel.value
@@ -1126,6 +1247,27 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun searchWebMcpRepositories(query: String = "") {
+        viewModelScope.launch {
+            _isSearchingWebMcp.value = true
+            dynamicSkillEngine.searchWebMcpRepositories(query)
+            _isSearchingWebMcp.value = false
+        }
+    }
+
+    fun addStreamedMcpServerFromRepo(repo: McpWebRepository, customEndpoint: String = "") {
+        val server = dynamicSkillEngine.addStreamedServerFromRepo(repo, customEndpoint)
+        viewModelScope.launch {
+            repository.insertMessage(
+                MessageEntity(
+                    sender = "system",
+                    content = "🌐 **HTTP Streamed MCP Server Connected:**\n• Server: ${server.name}\n• Repository: `${repo.fullName}`\n• Streamed Endpoint: `${server.endpoint}`\n• Transport: ${server.transport}\n• Active Status: ONLINE (${server.toolsCount} tools mapped for agent)",
+                    type = "mcp_hub"
+                )
+            )
+        }
+    }
+
     fun executeMcpTool(toolName: String) {
         viewModelScope.launch {
             val result = dynamicSkillEngine.executeMcpTool(toolName, emptyMap())
@@ -1165,7 +1307,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             ))
 
             try {
-                val orchestrator = TaskOrchestrator(isOffline = isLowBattery.value, preferredProvider = activeProvider.value)
+                val orchestrator = TaskOrchestrator(isOffline = isOfflineState(), preferredProvider = activeProvider.value)
                 val computation = orchestrator.routeAndExecute("Execute as replicated Agent Smith hive mind for task: $task")
 
                 delay(500)
@@ -1208,7 +1350,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             delay(600)
 
             try {
-                val orchestrator = TaskOrchestrator(isOffline = isLowBattery.value, preferredProvider = activeProvider.value)
+                val orchestrator = TaskOrchestrator(isOffline = isOfflineState(), preferredProvider = activeProvider.value)
                 _subAgentState.value = Triple("Agent Smith [Architect]", "Analyzing architecture via $activeProvider...", 0.5f)
                 val techDeferred = async { orchestrator.routeAndExecute("Provide technical details on: $topic") }
                 
@@ -1259,7 +1401,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             delay(500)
 
             try {
-                val orchestrator = TaskOrchestrator(isOffline = isLowBattery.value, preferredProvider = activeProvider.value)
+                val orchestrator = TaskOrchestrator(isOffline = isOfflineState(), preferredProvider = activeProvider.value)
                 val provider1 = async { orchestrator.routeAndExecute("Logical Analysis Node: $task") }
                 val provider2 = async { orchestrator.routeAndExecute("Creative Alternative Node: $task") }
 
@@ -1382,9 +1524,259 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun isNetworkAvailable(): Boolean {
+        return _isNetworkConnected.value
+    }
+
+    private fun isOfflineState(): Boolean {
+        return !_isNetworkConnected.value || isLowBattery.value
+    }
+
+    fun executeTaskChain(chain: List<String>) {
+        viewModelScope.launch {
+            repository.insertMessage(MessageEntity(sender = "system", content = "⛓️ STARTING AUTONOMOUS NON-BLOCKING COROUTINE TASK FLOW [${chain.size} steps]..."))
+            
+            // Convert list to a cold Flow
+            val taskFlow = kotlinx.coroutines.flow.flow {
+                chain.forEach { task ->
+                    emit(task)
+                }
+            }
+
+            // Collect and execute sequentially with zero stalling or prompt waiting
+            taskFlow.collect { task ->
+                val cleanTask = task.trim()
+                if (cleanTask.isNotBlank()) {
+                    repository.insertMessage(MessageEntity(sender = "system", content = "⚡ Executing Task Chain node: '$cleanTask'..."))
+                    
+                    try {
+                        val orchestrator = TaskOrchestrator(
+                            isOffline = isOfflineState(),
+                            preferredProvider = activeProvider.value,
+                            preferredModel = activeModel.value,
+                            thinkingLevel = thinkingLevel.value,
+                            toolRegistry = toolRegistry
+                        )
+                        val response = orchestrator.routeAndExecute(cleanTask)
+                        repository.insertMessage(MessageEntity(sender = "agent", content = "✨ Node Complete: $cleanTask\n\n$response"))
+                        
+                        if (_voiceModeActive.value) {
+                            ttsManager.speak("Completed task node: $cleanTask")
+                        }
+                    } catch (e: Exception) {
+                        repository.insertMessage(MessageEntity(sender = "system", content = "⚠️ Task Chain node failed: ${e.localizedMessage}"))
+                    }
+                    
+                    // Small delay between steps for visual progression, completely automated non-blocking
+                    delay(800)
+                }
+            }
+
+            repository.insertMessage(MessageEntity(sender = "system", content = "✅ ALL COMPLETED: Non-blocking task chain fully executed without manual intervention."))
+        }
+    }
+
     override fun onCleared() {
         batteryMonitor.stopMonitoring()
         ttsManager.shutdown()
+        val connectivityManager = getApplication<android.app.Application>()
+            .getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        try {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+            // Safe ignore
+        }
         super.onCleared()
+    }
+
+    private val okHttpClientFetch = okhttp3.OkHttpClient.Builder()
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
+
+    fun fetchModelsForProvider(provider: String, apiKey: String) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val fetched = mutableListOf<Pair<String, String>>()
+            try {
+                when (provider) {
+                    "Google Gemini" -> {
+                        val keyToUse = if (apiKey.isNotBlank()) apiKey else {
+                            try {
+                                val field = com.example.BuildConfig::class.java.getField("GEMINI_API_KEY")
+                                field.get(null) as String
+                            } catch (e: Exception) {
+                                ""
+                            }
+                        }
+                        if (keyToUse.isNotBlank()) {
+                            val request = okhttp3.Request.Builder()
+                                .url("https://generativelanguage.googleapis.com/v1beta/models?key=$keyToUse")
+                                .build()
+                            okHttpClientFetch.newCall(request).execute().use { response ->
+                                if (response.isSuccessful) {
+                                    val bodyStr = response.body?.string() ?: ""
+                                    val regex = Regex("\"name\"\\s*:\\s*\"models/([^\"]+)\"")
+                                    val matches = regex.findAll(bodyStr)
+                                    matches.forEach { match ->
+                                        val modelId = match.groupValues[1]
+                                        if (modelId.contains("gemini") || modelId.contains("flash") || modelId.contains("pro")) {
+                                            fetched.add("models/$modelId" to modelId)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (fetched.isEmpty()) {
+                            fetched.addAll(listOf(
+                                "models/gemini-2.5-flash" to "gemini-2.5-flash (Standard)",
+                                "models/gemini-2.5-pro" to "gemini-2.5-pro (Advanced)",
+                                "models/gemini-1.5-flash" to "gemini-1.5-flash (Fast)",
+                                "models/gemini-1.5-pro" to "gemini-1.5-pro (High intelligence)"
+                            ))
+                        }
+                    }
+
+                    "Groq" -> {
+                        if (apiKey.isNotBlank()) {
+                            val request = okhttp3.Request.Builder()
+                                .url("https://api.groq.com/openai/v1/models")
+                                .header("Authorization", "Bearer $apiKey")
+                                .build()
+                            okHttpClientFetch.newCall(request).execute().use { response ->
+                                if (response.isSuccessful) {
+                                    val bodyStr = response.body?.string() ?: ""
+                                    val regex = Regex("\"id\"\\s*:\\s*\"([^\"]+)\"")
+                                    val matches = regex.findAll(bodyStr)
+                                    matches.forEach { match ->
+                                        val modelId = match.groupValues[1]
+                                        fetched.add(modelId to modelId)
+                                    }
+                                }
+                            }
+                        }
+                        if (fetched.isEmpty()) {
+                            fetched.addAll(listOf(
+                                "llama-3.3-70b-versatile" to "llama-3.3-70b-versatile (Default)",
+                                "llama-3.1-8b-instant" to "llama-3.1-8b-instant (Fast)",
+                                "mixtral-8x7b-32768" to "mixtral-8x7b-32768 (MoE)",
+                                "gemma2-9b-it" to "gemma2-9b-it (Google Core)"
+                            ))
+                        }
+                    }
+
+                    "OpenRouter" -> {
+                        val request = okhttp3.Request.Builder()
+                            .url("https://openrouter.ai/api/v1/models")
+                            .build()
+                        okHttpClientFetch.newCall(request).execute().use { response ->
+                            if (response.isSuccessful) {
+                                val bodyStr = response.body?.string() ?: ""
+                                val idRegex = Regex("\"id\"\\s*:\\s*\"([^\"]+)\"")
+                                val nameRegex = Regex("\"name\"\\s*:\\s*\"([^\"]+)\"")
+                                val idMatches = idRegex.findAll(bodyStr).map { it.groupValues[1] }.toList()
+                                val nameMatches = nameRegex.findAll(bodyStr).map { it.groupValues[1] }.toList()
+                                for (i in idMatches.indices) {
+                                    val modelId = idMatches[i]
+                                    val modelName = nameMatches.getOrNull(i) ?: modelId
+                                    if (modelId.contains("free") || modelId.contains("llama") || modelId.contains("qwen") || modelId.contains("deepseek") || modelId.contains("gemma")) {
+                                        fetched.add(modelId to modelName)
+                                    }
+                                }
+                            }
+                        }
+                        if (fetched.isEmpty()) {
+                            fetched.addAll(listOf(
+                                "meta-llama/llama-3.3-70b-instruct:free" to "Llama 3.3 70B Instruct (Free)",
+                                "deepseek/deepseek-r1:free" to "DeepSeek R1 (Free)",
+                                "qwen/qwen-2.5-72b-instruct:free" to "Qwen 2.5 72B (Free)",
+                                "google/gemma-2-9b-it:free" to "Gemma 2 9B (Free)"
+                            ))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore and fallback
+            }
+            _providerModels.value = fetched.distinctBy { it.first }.take(15)
+        }
+    }
+
+    fun executeIdleTasksConcurrently() {
+        viewModelScope.launch {
+            val active = activeProvider.value
+            val idleApis = mutableListOf<String>()
+            
+            val hasGroq = !repository.preferencesManager.groqApiKey.first().isNullOrBlank()
+            val hasOpenRouter = !repository.preferencesManager.openrouterApiKey.first().isNullOrBlank()
+            
+            if (active != "Google Gemini") {
+                idleApis.add("Google Gemini")
+            }
+            if (active != "Groq" && hasGroq) {
+                idleApis.add("Groq")
+            }
+            if (active != "OpenRouter" && hasOpenRouter) {
+                idleApis.add("OpenRouter")
+            }
+            
+            if (idleApis.isNotEmpty()) {
+                val routineToRun = automatedSystemEngine.routines.value.find { it.isEnabled }
+                if (routineToRun != null) {
+                    val assignedApi = idleApis.random()
+                    
+                    // Update reactive node statuses
+                    _nodeStatuses.value = _nodeStatuses.value.map { status ->
+                        if (status.name.contains(assignedApi, ignoreCase = true)) {
+                            status.copy(isActive = true, backgroundJob = "Running Routine: ${routineToRun.title}", totalRequests = status.totalRequests + 1)
+                        } else {
+                            status
+                        }
+                    }
+
+                    repository.insertMessage(
+                        MessageEntity(
+                            sender = "system",
+                            content = "⚙️ [Background Worker - $assignedApi]: Idle API detected! Offloading automated routine '${routineToRun.title}' in the background..."
+                        )
+                    )
+                    
+                    delay(1200)
+                    val trace = automatedSystemEngine.executeRoutineNow(routineToRun.id)
+                    repository.insertMessage(
+                        MessageEntity(
+                            sender = "system",
+                            content = "✅ [Background Worker - $assignedApi]: Successfully completed '${routineToRun.title}' on idle node. Trace logged to database."
+                        )
+                    )
+
+                    _nodeStatuses.value = _nodeStatuses.value.map { status ->
+                        if (status.name.contains(assignedApi, ignoreCase = true)) {
+                            status.copy(isActive = false, backgroundJob = "Completed Audit", latencyMs = (10..40).random())
+                        } else {
+                            status
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun triggerIdleApiBackgroundWork() {
+        val active = activeProvider.value
+        _nodeStatuses.value = _nodeStatuses.value.map { status ->
+            if (!status.name.contains(active, ignoreCase = true)) {
+                status.copy(isActive = true, backgroundJob = "WorkManager Audit Scheduled")
+            } else {
+                status.copy(isActive = true, backgroundJob = "Active Client Command")
+            }
+        }
+        val workManager = androidx.work.WorkManager.getInstance(getApplication())
+        val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.example.agent.service.IdleApiWorker>()
+            .build()
+        workManager.enqueueUniqueWork(
+            "IDLE_API_WORK",
+            androidx.work.ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
     }
 }

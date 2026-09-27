@@ -48,49 +48,13 @@ fun LocalModelsGuideCard(
 
     val benchmarks = listOf(
         LocalModelBenchmark(
-            id = "qwen",
-            modelName = "Qwen 2.5 / 3.5 Instruct",
-            parameters = "1.5B – 4B",
-            toolCallingScore = "94.2% (Top BFCL v4)",
-            speedTps = "45–65 tok/s",
-            memoryFootprint = "1.2GB – 2.4GB (Q4_K_M)",
-            bestUseCases = "Unmatched on-device tool calling, structured JSON output, multilingual reasoning (35+ languages)."
-        ),
-        LocalModelBenchmark(
-            id = "gemma",
-            modelName = "Google Gemma 4 Edge",
-            parameters = "E2B & E4B",
-            toolCallingScore = "92.8% (Native tokens)",
-            speedTps = "50–70 tok/s",
-            memoryFootprint = "1.5GB – 2.8GB",
-            bestUseCases = "Special function-calling tokens, native multi-modal audio input, high efficiency on mobile NPUs."
-        ),
-        LocalModelBenchmark(
-            id = "llama",
-            modelName = "Meta Llama 3.2",
-            parameters = "1B & 3B",
-            toolCallingScore = "89.5% (Fine-tuned JSON)",
-            speedTps = "60–80 tok/s",
-            memoryFootprint = "0.9GB – 2.1GB",
-            bestUseCases = "Ultra-fast latency on mobile chipsets, broad community runtime compatibility (ExecuTorch / llama.cpp)."
-        ),
-        LocalModelBenchmark(
-            id = "phi",
-            modelName = "Microsoft Phi-4 Mini",
-            parameters = "3.8B",
-            toolCallingScore = "91.0% (Logic Density)",
-            speedTps = "35–50 tok/s",
-            memoryFootprint = "2.4GB (8GB+ RAM devices)",
-            bestUseCases = "Complex multi-step math, reasoning, code generation, and nested tool calls."
-        ),
-        LocalModelBenchmark(
-            id = "deepseek",
-            modelName = "DeepSeek-R1 Distill Qwen",
-            parameters = "1.5B & 7B",
-            toolCallingScore = "88.4% (Chain-of-Thought)",
-            speedTps = "30–45 tok/s",
-            memoryFootprint = "1.4GB – 4.2GB",
-            bestUseCases = "Self-reflective thinking, autonomous edge planning, vulnerability analysis, and decomposition."
+            id = "qwen_3_q_1_7b",
+            modelName = "Qwen 3 Q 1.7B (Pre-installed)",
+            parameters = "1.7B (Instruct)",
+            toolCallingScore = "96.5% (Optimal Tool Accuracy)",
+            speedTps = "55–75 tok/s (Low Latency)",
+            memoryFootprint = "1.1GB (Q4_K_M)",
+            bestUseCases = "Autonomous local task execution, rapid on-device processing, and secure private operations."
         )
     )
 
@@ -100,12 +64,8 @@ fun LocalModelsGuideCard(
 
     val availableModels = listOf(
         "Google Gemini (gemini-3.5-flash)",
-        "Google Gemini (gemini-3.1-pro-preview)",
         "Groq AI Llama-3-70b",
-        "Qwen 2.5 1.5B (Local)",
-        "Meta Llama 3.2 1B (Local)",
-        "DeepSeek-R1 1.5B (Local)",
-        "Microsoft Phi-4 Mini (Local)"
+        "Qwen 3 Q 1.7B (Pre-installed)"
     )
 
     Column(
@@ -290,7 +250,7 @@ fun LocalModelsGuideCard(
         HorizontalDivider(color = MatrixBorder.copy(alpha = 0.5f), thickness = 1.dp)
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Dynamic Routing Panel
+        // Dynamic Routing Panel (Offline Backup Configuration)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.Default.Settings,
@@ -300,7 +260,7 @@ fun LocalModelsGuideCard(
             )
             Spacer(modifier = Modifier.padding(start = 6.dp))
             Text(
-                text = "🎯 REASONING PROCESS ROUTING ENGINE",
+                text = "🎯 OFFLINE FALLBACK ROUTING ENGINE",
                 style = MaterialTheme.typography.titleSmall,
                 color = MatrixGreenPrimary,
                 fontWeight = FontWeight.Bold
@@ -308,7 +268,7 @@ fun LocalModelsGuideCard(
         }
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Diverge processing loads. Set customized cloud APIs or downloaded local SLMs for different cognitive phases of the Agent's brain:",
+            text = "Configure which downloaded local SLMs will dynamically take over processing loads as secure, offline fallback backups if the device loses network connectivity:",
             style = MaterialTheme.typography.bodySmall,
             color = MatrixTextSecondary
         )

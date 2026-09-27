@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,11 +19,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
@@ -48,6 +53,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.TextButton
+import com.example.agent.ui.theme.MatrixBlack
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -60,6 +72,7 @@ import com.example.agent.ui.chat.components.LocalModelsGuideCard
 import com.example.agent.ui.chat.components.MatrixMemoryCard
 import com.example.agent.ui.chat.components.MatrixToolsMenuCard
 import com.example.agent.ui.chat.components.McpServerManagementDialog
+import com.example.agent.ui.chat.components.McpServerOrchestratorCard
 import com.example.agent.ui.chat.components.McpSkillsCard
 import com.example.agent.ui.theme.MatrixBorder
 import com.example.agent.ui.chat.components.MessageCard
@@ -121,6 +134,8 @@ fun ChatScreen(
     val mcpServers by viewModel.mcpServers.collectAsState()
     val catalogServers by viewModel.catalogServers.collectAsState()
     val mcpTools by viewModel.mcpTools.collectAsState()
+    val mcpWebRepositories by viewModel.mcpWebRepositories.collectAsState()
+    val isSearchingWebMcp by viewModel.isSearchingWebMcp.collectAsState()
 
     val profile by onboardingViewModel.profile.collectAsState()
     val isAiCoreActive by viewModel.isAiCoreActive.collectAsState()
@@ -139,6 +154,8 @@ fun ChatScreen(
     val biometricLock by viewModel.biometricLock.collectAsState()
     val totalCost by viewModel.totalCost.collectAsState()
     val subAgentState by viewModel.subAgentState.collectAsState()
+    val providerModels by viewModel.providerModels.collectAsState()
+    val nodeStatuses by viewModel.nodeStatuses.collectAsState()
     
     // Character Card v2 State
     val charName by viewModel.charName.collectAsState()
@@ -244,18 +261,49 @@ fun ChatScreen(
         activityLevel = dynamicActivityLevel
     ) {
         if (showMcpMenu) {
-            McpServerManagementDialog(
-                servers = mcpServers,
-                catalogServers = catalogServers,
-                tools = mcpTools,
-                onDismiss = { viewModel.closeMcpMenu() },
-                onInstallServer = { server -> viewModel.installMcpServer(server) },
-                onUninstallServer = { id -> viewModel.uninstallMcpServer(id) },
-                onToggleServer = { id, enabled -> viewModel.toggleMcpServer(id, enabled) },
-                onAddCustomServer = { name, ep, tr, desc, auth -> viewModel.addCustomMcpServer(name, ep, tr, desc, auth) },
-                onExecuteTool = { toolName -> viewModel.executeMcpTool(toolName) },
-                onResetDefaults = { viewModel.resetMcpServersToDefaults() }
-            )
+            androidx.compose.ui.window.Dialog(
+                onDismissRequest = { viewModel.closeMcpMenu() },
+                properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                androidx.compose.material3.Surface(
+                    modifier = Modifier
+                        .fillMaxWidth(0.96f)
+                        .height(680.dp)
+                        .background(MatrixSurface, RoundedCornerShape(20.dp))
+                        .border(2.dp, MatrixGreenPrimary, RoundedCornerShape(20.dp)),
+                    color = MatrixSurface,
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            IconButton(onClick = { viewModel.closeMcpMenu() }) {
+                                Icon(Icons.Default.Close, contentDescription = "Close", tint = MatrixTextSecondary)
+                            }
+                        }
+                        McpServerOrchestratorCard(
+                            servers = mcpServers,
+                            webRepositories = mcpWebRepositories,
+                            tools = mcpTools,
+                            isSearchingWeb = isSearchingWebMcp,
+                            onToggleServer = { id, enabled -> viewModel.toggleMcpServer(id, enabled) },
+                            onSearchWebRepositories = { q -> viewModel.searchWebMcpRepositories(q) },
+                            onAddStreamedServerFromRepo = { repo -> viewModel.addStreamedMcpServerFromRepo(repo) },
+                            onUninstallServer = { id -> viewModel.uninstallMcpServer(id) },
+                            onExecuteTool = { toolName -> viewModel.executeMcpTool(toolName) },
+                            onAddCustomServer = { name, ep, tr, desc, auth -> viewModel.addCustomMcpServer(name, ep, tr, desc, auth) },
+                            onResetDefaults = { viewModel.resetMcpServersToDefaults() }
+                        )
+                    }
+                }
+            }
         }
 
         Scaffold(
@@ -464,6 +512,22 @@ fun ChatScreen(
                             maxLines = 3
                         )
 
+                        if (inputMessage.isNotBlank()) {
+                            IconButton(
+                                onClick = {
+                                    viewModel.enhancePrompt(inputMessage) { enhanced ->
+                                        inputMessage = enhanced
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.AutoAwesome,
+                                    contentDescription = "AI Enhance Prompt",
+                                    tint = MatrixGreenPrimary
+                                )
+                            }
+                        }
+
                         IconButton(
                             onClick = {
                                 if (inputMessage.isNotBlank()) {
@@ -498,12 +562,14 @@ fun ChatScreen(
                         }
                     }
                 } else {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 8.dp)
-                    ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        DistributedApiNodeMonitorDashboard(nodeStatuses = nodeStatuses)
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 8.dp)
+                        ) {
                         items(messages) { message ->
                             when (message.type) {
                                 "proactive_sentinel" -> ProactiveSentinelCard(
@@ -562,6 +628,7 @@ fun ChatScreen(
                                     charTone = charTone,
                                     soundFxVolume = soundFxVolume,
                                     soundFxFrequency = soundFxFrequency,
+                                    providerModels = providerModels,
                                     onSaveKeys = { gemini, groq, openrouter, hf, mistral, together, cohere, openai, anthropic ->
                                         viewModel.saveAllApiKeys(gemini, groq, openrouter, hf, mistral, together, cohere, openai, anthropic)
                                     },
@@ -597,18 +664,18 @@ fun ChatScreen(
                                     onRedial = { phone -> viewModel.sendMessage("/call $phone") },
                                     onClearAll = { viewModel.clearCallLogs() }
                                 )
-                                "mcp_hub", "mcpservers", "mcp_servers" -> McpSkillsCard(
+                                "mcp_hub", "mcpservers", "mcp_servers" -> McpServerOrchestratorCard(
                                     servers = mcpServers,
-                                    catalogServers = catalogServers,
+                                    webRepositories = mcpWebRepositories,
                                     tools = mcpTools,
-                                    persistedSkills = skills,
-                                    onInstallServer = { server -> viewModel.installMcpServer(server) },
-                                    onUninstallServer = { id -> viewModel.uninstallMcpServer(id) },
+                                    isSearchingWeb = isSearchingWebMcp,
                                     onToggleServer = { id, enabled -> viewModel.toggleMcpServer(id, enabled) },
+                                    onSearchWebRepositories = { q -> viewModel.searchWebMcpRepositories(q) },
+                                    onAddStreamedServerFromRepo = { repo -> viewModel.addStreamedMcpServerFromRepo(repo) },
+                                    onUninstallServer = { id -> viewModel.uninstallMcpServer(id) },
+                                    onExecuteTool = { toolName -> viewModel.executeMcpTool(toolName) },
                                     onAddCustomServer = { name, ep, tr, desc, auth -> viewModel.addCustomMcpServer(name, ep, tr, desc, auth) },
-                                    onResetDefaults = { viewModel.resetMcpServersToDefaults() },
-                                    onSynthesizeSkill = { prompt -> viewModel.synthesizeMcpSkill(prompt) },
-                                    onExecuteTool = { toolName -> viewModel.executeMcpTool(toolName) }
+                                    onResetDefaults = { viewModel.resetMcpServersToDefaults() }
                                 )
                                 "slms_guide" -> LocalModelsGuideCard(
                                     downloadedModels = downloadedLocalModels,
@@ -695,6 +762,7 @@ fun ChatScreen(
                             }
                         }
                     }
+                    }
                 }
             }
         }
@@ -753,5 +821,92 @@ private fun startSpeechListening(
         recognizer.startListening(intent)
     } catch (e: Exception) {
         onError()
+    }
+}
+
+@Composable
+fun DistributedApiNodeMonitorDashboard(
+    nodeStatuses: List<com.example.agent.ui.chat.ChatViewModel.ApiNodeStatus>
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MatrixSurface.copy(alpha = 0.9f))
+            .border(1.dp, MatrixBorder)
+            .padding(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.Hub,
+                contentDescription = "Distributed Grid Monitor",
+                tint = MatrixGreenPrimary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "⚡ DISTRIBUTED COGNITIVE GRID MONITOR",
+                style = MaterialTheme.typography.labelMedium,
+                color = MatrixGreenPrimary,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = { isExpanded = !isExpanded }) {
+                Text(
+                    text = if (isExpanded) "CLOSE TELEMETRY" else "VIEW LIVE TELEMETRY",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MatrixGreenPrimary
+                )
+            }
+        }
+
+        if (isExpanded) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+            ) {
+                nodeStatuses.forEach { node ->
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(4.dp)
+                            .background(MatrixBlack, RoundedCornerShape(6.dp))
+                            .border(1.dp, if (node.isActive) MatrixGreenPrimary else MatrixBorder, RoundedCornerShape(6.dp))
+                            .padding(6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .background(if (node.isActive) MatrixGreenPrimary else MatrixTextSecondary, RoundedCornerShape(100.dp))
+                                    .padding(4.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = node.name,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (node.isActive) MatrixGreenPrimary else MatrixTextSecondary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Latency: ${node.latencyMs}ms",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MatrixTextPrimary
+                        )
+                        Text(
+                            text = node.backgroundJob,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MatrixTextSecondary,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
     }
 }

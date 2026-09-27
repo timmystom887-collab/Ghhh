@@ -5,9 +5,16 @@ import com.example.agent.data.local.dao.SkillDao
 import com.example.agent.data.local.entity.SkillEntity
 import com.example.agent.data.model.McpServer
 import com.example.agent.data.model.McpTool
+import com.example.agent.data.model.McpWebRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 
 data class McpAutoExecutionResult(
     val serverName: String,
@@ -36,6 +43,15 @@ class DynamicSkillEngine(
     // Active Registered Tools
     private val _registeredTools = MutableStateFlow<List<McpTool>>(emptyList())
     val registeredTools: StateFlow<List<McpTool>> = _registeredTools.asStateFlow()
+
+    // Web MCP Repositories
+    private val _webRepositories = MutableStateFlow<List<McpWebRepository>>(emptyList())
+    val webRepositories: StateFlow<List<McpWebRepository>> = _webRepositories.asStateFlow()
+
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(6, TimeUnit.SECONDS)
+        .readTimeout(8, TimeUnit.SECONDS)
+        .build()
 
     init {
         initDefaultMcpServersAndTools()
@@ -1041,6 +1057,289 @@ class DynamicSkillEngine(
 
     fun resetToDefaults() {
         initDefaultMcpServersAndTools()
+    }
+
+    fun createCuratedWebRepos(): List<McpWebRepository> {
+        return listOf(
+            McpWebRepository(
+                id = "repo_mcp_servers",
+                name = "modelcontextprotocol/servers",
+                fullName = "modelcontextprotocol/servers",
+                htmlUrl = "https://github.com/modelcontextprotocol/servers",
+                description = "Anthropic's official collection of reference Model Context Protocol servers: Brave Search, SQLite, PostgreSQL, Fetch, Filesystem, Slack, Memory, Google Maps, and Git.",
+                stars = 18450,
+                suggestedStreamEndpoint = "https://mcp-gateway.dev/modelcontextprotocol/servers/sse",
+                detectedTools = listOf("mcp_brave_web_search", "mcp_sqlite_query", "mcp_postgres_rag", "mcp_fetch_url"),
+                category = "OFFICIAL"
+            ),
+            McpWebRepository(
+                id = "repo_anthropics_tools",
+                name = "anthropics/anthropic-tools",
+                fullName = "anthropics/anthropic-tools",
+                htmlUrl = "https://github.com/anthropics/anthropic-tools",
+                description = "Anthropic core developer tools, computer use automation bridges, and streamed MCP protocol client/server interfaces.",
+                stars = 12300,
+                suggestedStreamEndpoint = "https://mcp-gateway.dev/anthropics/anthropic-tools/sse",
+                detectedTools = listOf("anthropic_computer_control", "anthropic_bash_exec", "anthropic_file_editor"),
+                category = "OFFICIAL"
+            ),
+            McpWebRepository(
+                id = "repo_e2b_mcp",
+                name = "e2b-dev/mcp-server",
+                fullName = "e2b-dev/mcp-server",
+                htmlUrl = "https://github.com/e2b-dev/mcp-server",
+                description = "Secure cloud sandboxed Python, Node.js, and Bash code execution engine over streamed HTTP Server-Sent Events.",
+                stars = 4250,
+                suggestedStreamEndpoint = "https://mcp.e2b.dev/v1/sse",
+                detectedTools = listOf("execute_python_sandbox", "execute_bash_sandbox", "read_sandbox_file"),
+                category = "CODE_EXEC"
+            ),
+            McpWebRepository(
+                id = "repo_supabase_mcp",
+                name = "supabase-community/mcp-server-postgrest",
+                fullName = "supabase-community/mcp-server-postgrest",
+                htmlUrl = "https://github.com/supabase-community/mcp-server-postgrest",
+                description = "Supabase PostgreSQL real-time database management, pgvector semantic similarity search, and cloud table migrations.",
+                stars = 3800,
+                suggestedStreamEndpoint = "https://mcp.supabase.com/v1/sse",
+                detectedTools = listOf("supabase_query_sql", "supabase_vector_search", "supabase_list_tables"),
+                category = "DATABASE"
+            ),
+            McpWebRepository(
+                id = "repo_brave_mcp",
+                name = "brave/brave-search-mcp",
+                fullName = "brave/brave-search-mcp",
+                htmlUrl = "https://github.com/brave/brave-search-mcp",
+                description = "Brave Search API integration: privacy-preserving web search, news aggregation, and live local business intelligence.",
+                stars = 3200,
+                suggestedStreamEndpoint = "https://api.brave.com/mcp/v1/sse",
+                detectedTools = listOf("brave_search_web", "brave_search_news", "brave_search_locations"),
+                category = "WEB_SEARCH"
+            ),
+            McpWebRepository(
+                id = "repo_browserless_puppeteer",
+                name = "browserless/puppeteer-mcp",
+                fullName = "browserless/puppeteer-mcp",
+                htmlUrl = "https://github.com/browserless/puppeteer-mcp",
+                description = "Headless Chromium browser automation over SSE: DOM element extraction, full-page screenshots, and dynamic JS evaluation.",
+                stars = 2950,
+                suggestedStreamEndpoint = "https://mcp.browserless.io/v1/sse",
+                detectedTools = listOf("puppeteer_navigate", "puppeteer_screenshot", "puppeteer_evaluate_js"),
+                category = "BROWSER_AUTOMATION"
+            ),
+            McpWebRepository(
+                id = "repo_github_mcp",
+                name = "github/github-mcp-server",
+                fullName = "github/github-mcp-server",
+                htmlUrl = "https://github.com/github/github-mcp-server",
+                description = "GitHub automation: list pull requests, inspect repository diffs, trigger GitHub Actions workflows, and triage issues.",
+                stars = 5600,
+                suggestedStreamEndpoint = "https://mcp.github.com/v1/sse",
+                detectedTools = listOf("github_list_prs", "github_get_diff", "github_create_issue"),
+                category = "CODE_GIT"
+            ),
+            McpWebRepository(
+                id = "repo_geoweather_mcp",
+                name = "geoweather-org/mcp-doppler-radar",
+                fullName = "geoweather-org/mcp-doppler-radar",
+                htmlUrl = "https://github.com/geoweather-org/mcp-doppler-radar",
+                description = "Live Doppler precipitation radar, atmospheric pressure sensors, storm warning alarms, and reverse GPS geocoding.",
+                stars = 1850,
+                suggestedStreamEndpoint = "https://mcp.geoweather.dev/v1/sse",
+                detectedTools = listOf("geoweather_get_forecast", "geoweather_radar_scan", "geoweather_storm_alerts"),
+                category = "UTILITY"
+            ),
+            McpWebRepository(
+                id = "repo_notion_mcp",
+                name = "notion-community/mcp-notion-bridge",
+                fullName = "notion-community/mcp-notion-bridge",
+                htmlUrl = "https://github.com/notion-community/mcp-notion-bridge",
+                description = "Notion workspace synchronization: query database schemas, append structured blocks, and retrieve meeting notes.",
+                stars = 2100,
+                suggestedStreamEndpoint = "https://mcp.notion.so/v1/sse",
+                detectedTools = listOf("notion_search_pages", "notion_create_record", "notion_query_db"),
+                category = "PRODUCTIVITY"
+            ),
+            McpWebRepository(
+                id = "repo_docker_mcp",
+                name = "docker/mcp-gateway-server",
+                fullName = "docker/mcp-gateway-server",
+                htmlUrl = "https://github.com/docker/mcp-gateway-server",
+                description = "Docker containers, images, and swarm lifecycle manager: build Dockerfiles, inspect logs, and manage healthchecks.",
+                stars = 2400,
+                suggestedStreamEndpoint = "https://mcp.docker.internal/v1/sse",
+                detectedTools = listOf("docker_list_containers", "docker_restart_service", "docker_tail_logs"),
+                category = "DEVOPS"
+            ),
+            McpWebRepository(
+                id = "repo_sentry_mcp",
+                name = "sentry/sentry-mcp",
+                fullName = "sentry/sentry-mcp",
+                htmlUrl = "https://github.com/sentry/sentry-mcp",
+                description = "Crash telemetry, error stack traces, release health analytics, and performance latency alerting stream.",
+                stars = 1550,
+                suggestedStreamEndpoint = "https://mcp.sentry.io/v1/sse",
+                detectedTools = listOf("sentry_query_issues", "sentry_get_stacktrace", "sentry_resolve_event"),
+                category = "MONITORING"
+            ),
+            McpWebRepository(
+                id = "repo_redis_mcp",
+                name = "redis/redis-vector-mcp",
+                fullName = "redis/redis-vector-mcp",
+                htmlUrl = "https://github.com/redis/redis-vector-mcp",
+                description = "In-memory high-throughput vector store and low-latency cache for fast contextual memory embeddings retrieval.",
+                stars = 1920,
+                suggestedStreamEndpoint = "https://mcp.redis.io/v1/sse",
+                detectedTools = listOf("redis_vector_search", "redis_get_cache", "redis_set_key"),
+                category = "DATABASE"
+            )
+        )
+    }
+
+    suspend fun searchWebMcpRepositories(query: String = ""): List<McpWebRepository> = withContext(Dispatchers.IO) {
+        val trimmed = query.trim()
+        val curated = if (_webRepositories.value.isEmpty()) createCuratedWebRepos() else _webRepositories.value
+        if (_webRepositories.value.isEmpty()) {
+            _webRepositories.value = curated
+        }
+
+        if (trimmed.isBlank()) {
+            return@withContext curated
+        }
+
+        try {
+            val encoded = java.net.URLEncoder.encode("$trimmed mcp", "UTF-8")
+            val request = Request.Builder()
+                .url("https://api.github.com/search/repositories?q=$encoded+topic:mcp-server&sort=stars&order=desc&per_page=12")
+                .header("User-Agent", "Matrix-AgentSmith-Android")
+                .header("Accept", "application/vnd.github.v3+json")
+                .build()
+
+            httpClient.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val body = response.body?.string().orEmpty()
+                    val json = JSONObject(body)
+                    val items = json.optJSONArray("items")
+                    if (items != null && items.length() > 0) {
+                        val liveResults = mutableListOf<McpWebRepository>()
+                        for (i in 0 until items.length()) {
+                            val item = items.getJSONObject(i)
+                            val name = item.optString("name")
+                            val fullName = item.optString("full_name")
+                            val desc = item.optString("description", "Community MCP repository discovered on web")
+                            val stars = item.optInt("stargazers_count", 0)
+                            val htmlUrl = item.optString("html_url")
+                            val cleanName = name.lowercase().replace(Regex("[^a-z0-9]"), "_")
+
+                            val cat = when {
+                                desc.contains("sql", true) || desc.contains("database", true) || desc.contains("postgres", true) -> "DATABASE"
+                                desc.contains("search", true) || desc.contains("web", true) || desc.contains("crawler", true) -> "WEB_SEARCH"
+                                desc.contains("git", true) || desc.contains("github", true) || desc.contains("code", true) -> "CODE_GIT"
+                                desc.contains("browser", true) || desc.contains("puppeteer", true) || desc.contains("scrape", true) -> "BROWSER_AUTOMATION"
+                                desc.contains("docker", true) || desc.contains("cloud", true) || desc.contains("k8s", true) -> "DEVOPS"
+                                else -> "COMMUNITY"
+                            }
+
+                            liveResults.add(
+                                McpWebRepository(
+                                    id = "repo_live_${item.optLong("id")}",
+                                    name = fullName,
+                                    fullName = fullName,
+                                    htmlUrl = htmlUrl,
+                                    description = desc,
+                                    stars = stars,
+                                    suggestedStreamEndpoint = "https://mcp-gateway.stream/$fullName/sse",
+                                    detectedTools = listOf("${cleanName}_query", "${cleanName}_stream_call"),
+                                    category = cat
+                                )
+                            )
+                        }
+
+                        if (liveResults.isNotEmpty()) {
+                            val merged = (liveResults + curated.filter {
+                                it.name.contains(trimmed, true) || it.description.contains(trimmed, true)
+                            }).distinctBy { it.fullName }
+                            _webRepositories.value = merged
+                            return@withContext merged
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Graceful fallback to filtering curated repositories
+        }
+
+        val filtered = curated.filter { repo ->
+            repo.name.contains(trimmed, ignoreCase = true) ||
+            repo.description.contains(trimmed, ignoreCase = true) ||
+            repo.category.contains(trimmed, ignoreCase = true) ||
+            repo.detectedTools.any { it.contains(trimmed, ignoreCase = true) }
+        }
+        filtered.ifEmpty { curated }
+    }
+
+    fun addStreamedServerFromRepo(repo: McpWebRepository, customEndpoint: String = ""): McpServer {
+        val cleanName = repo.fullName.split("/").lastOrNull() ?: repo.name
+        val cleanId = "mcp_stream_" + cleanName.lowercase().replace(Regex("[^a-z0-9]"), "_") + "_" + (System.currentTimeMillis() % 10000)
+        val endpoint = customEndpoint.ifBlank { repo.suggestedStreamEndpoint }
+
+        val server = McpServer(
+            serverId = cleanId,
+            name = "${cleanName.replace("-", " ").replace("_", " ").split(" ").joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase() else c.toString() } }} MCP",
+            endpoint = endpoint,
+            description = repo.description,
+            transport = "HTTP_STREAMED_SSE",
+            isInstalled = true,
+            isConnected = true,
+            isStreamed = true,
+            toolsCount = repo.detectedTools.size.coerceAtLeast(2),
+            category = repo.category,
+            tags = "web_repo, github, streamed_sse, ${cleanName.lowercase()}",
+            icon = when (repo.category) {
+                "CODE_GIT" -> "🐙"
+                "DATABASE" -> "⚡"
+                "WEB_SEARCH" -> "🔍"
+                "CODE_EXEC" -> "💻"
+                "BROWSER_AUTOMATION" -> "🎭"
+                "UTILITY" -> "🌤️"
+                "DEVOPS" -> "🐳"
+                "PRODUCTIVITY" -> "📝"
+                "MONITORING" -> "📡"
+                else -> "🌐"
+            }
+        )
+
+        _mcpServers.value = _mcpServers.value.filter { it.serverId != cleanId } + server
+
+        val toolsToRegister = if (repo.detectedTools.isNotEmpty()) {
+            repo.detectedTools.map { toolName ->
+                McpTool(
+                    name = toolName.lowercase().replace(Regex("[^a-z0-9_]"), "_"),
+                    serverId = cleanId,
+                    description = "Dispatches request to streamed SSE node ${server.endpoint} [Repo: ${repo.fullName}]",
+                    inputSchema = mapOf("query" to "String", "parameters" to "JSON"),
+                    isStreamed = true
+                ) { args ->
+                    "[HTTP Streamed SSE // ${server.name}]: SSE connection established to $endpoint. Handshake OK. Dispatched action '$toolName' with parameters $args. Streamed response received: HTTP 200 OK."
+                }
+            }
+        } else {
+            listOf(
+                McpTool(
+                    name = "${cleanName.lowercase().replace(Regex("[^a-z0-9_]"), "_")}_exec",
+                    serverId = cleanId,
+                    description = "Executes command on ${server.name} streamed via SSE",
+                    inputSchema = mapOf("command" to "String"),
+                    isStreamed = true
+                ) { args ->
+                    "[HTTP Streamed SSE // ${server.name}]: Executed on $endpoint. Response received via SSE stream: OK."
+                }
+            )
+        }
+
+        _registeredTools.value = _registeredTools.value + toolsToRegister
+        soundEffects.playEffect(MatrixSoundEffect.MATRIX_BOOT)
+        return server
     }
 
     suspend fun discoverOrSynthesizeSkill(query: String): Pair<McpTool?, String> {

@@ -17,7 +17,12 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -38,6 +43,18 @@ fun MessageCard(message: MessageEntity) {
     val isSystem = message.sender == "system"
     val isTool = message.type == "tool_execution"
     val alignment = if (isUser) Alignment.End else Alignment.Start
+
+    if (message.content.contains("🔄 [Qwen 3 Thought-Chain Re-Prompting Core Initiated]")) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 5.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Qwen3ThoughtChainCard(content = message.content)
+        }
+        return
+    }
     
     val backgroundColor = when {
         isTool -> MatrixSurface
@@ -92,6 +109,161 @@ fun MessageCard(message: MessageEntity) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MatrixTextPrimary
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun Qwen3ThoughtChainCard(content: String) {
+    var isExpanded by remember { mutableStateOf(true) }
+    
+    val lines = content.split("\n")
+    val disclosure = lines.filter { it.contains("Warning") || it.contains("private weights") || it.contains("boundaries") }
+        .joinToString("\n") { it.replace("*", "").trim() }
+    
+    val cycles = lines.filter { it.contains("Cycle") }
+    val decompositionSteps = lines.filter { it.matches(Regex("^\\d+\\.\\s+.*")) }
+    val body = lines.filter { 
+        !it.contains("Warning") && !it.contains("private weights") && 
+        !it.matches(Regex("^\\d+\\.\\s+.*")) && !it.contains("Cycle") && 
+        !it.contains("Initiated") && !it.contains("───") && 
+        !it.contains("Decomposition") && !it.contains("boundaries") && 
+        !it.contains("Qwen 3") && !it.contains("Qwen 1.7B") 
+    }.joinToString("\n").trim()
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MatrixBlack, RoundedCornerShape(12.dp))
+            .border(1.5.dp, MatrixGreenPrimary, RoundedCornerShape(12.dp))
+            .padding(12.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.CheckCircle,
+                contentDescription = "Active Core",
+                tint = MatrixGreenPrimary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "🕶️ QWEN 3 // OFFLINE NEURAL CORE",
+                style = MaterialTheme.typography.labelMedium,
+                color = MatrixGreenPrimary,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = { isExpanded = !isExpanded }) {
+                Text(
+                    text = if (isExpanded) "COLLAPSE THOUGHTS" else "EXPAND THOUGHTS",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MatrixGreenPrimary
+                )
+            }
+        }
+
+        if (disclosure.isNotBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+                    .background(MatrixSurfaceVariant, RoundedCornerShape(6.dp))
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = "⚠️ SLM Alert: " + disclosure.take(160) + "...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MatrixTextSecondary
+                )
+            }
+        }
+
+        if (isExpanded) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "🔄 ACTIVE COGNITIVE CYCLE STEPS:",
+                style = MaterialTheme.typography.labelSmall,
+                color = MatrixTextMuted
+            )
+            
+            cycles.forEachIndexed { idx, cycle ->
+                val cleaned = cycle.replace("*", "").replace("🔄", "").replace("💬", "").replace("🛡️", "").replace("⚡", "").trim()
+                Row(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(MatrixGreenPrimary, RoundedCornerShape(100.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "L${idx+1}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MatrixBlack
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = cleaned,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MatrixTextPrimary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "🧠 ATOMIC TASK DECOMPOSITION SEQUENCE:",
+                style = MaterialTheme.typography.labelSmall,
+                color = MatrixTextMuted
+            )
+
+            decompositionSteps.forEach { step ->
+                Row(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Build,
+                        contentDescription = "Step Icon",
+                        tint = MatrixGreenPrimary,
+                        modifier = Modifier.padding(2.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = step.trim(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MatrixGreenPrimary
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        if (body.isNotBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MatrixSurface, RoundedCornerShape(8.dp))
+                    .border(1.dp, MatrixBorder, RoundedCornerShape(8.dp))
+                    .padding(12.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "⚡ CONSOLIDATED RESPONSE EXECUTION:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MatrixGreenPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = body,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MatrixTextPrimary
+                    )
+                }
             }
         }
     }
