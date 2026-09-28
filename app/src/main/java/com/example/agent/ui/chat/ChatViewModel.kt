@@ -14,9 +14,12 @@ import com.example.agent.data.model.McpServer
 import com.example.agent.data.model.McpTool
 import com.example.agent.data.model.McpWebRepository
 import com.example.agent.data.repository.AgentRepository
+import com.example.agent.data.model.ActiveSubAgentStatus
+import com.example.agent.data.model.SubAgentStatusState
 import com.example.agent.data.model.SubAgentClarificationRequest
 import com.example.agent.data.model.TerminalLogEntry
 import com.example.agent.service.BatteryMonitorService
+import kotlinx.coroutines.flow.combine
 import com.example.agent.ui.chat.components.PhoneCallMission
 import com.example.agent.ui.chat.components.SmithReplica
 import com.example.agent.ui.chat.components.SubTaskNode
@@ -294,6 +297,48 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _clarificationHistory = MutableStateFlow<List<Pair<SubAgentClarificationRequest, String>>>(emptyList())
     val clarificationHistory: StateFlow<List<Pair<SubAgentClarificationRequest, String>>> = _clarificationHistory.asStateFlow()
+
+    // Active Sub-Agent Visual Indicator State Flow
+    val activeSubAgentStatus: StateFlow<ActiveSubAgentStatus> = combine(
+        _activeClarification,
+        _isHermesProcessing,
+        _hermesStatus,
+        _subAgentState,
+        isSentinelModeActive
+    ) { clarification, isHermes, hermesStat, subAgent, sentinelActive ->
+        when {
+            clarification != null -> ActiveSubAgentStatus(
+                agentName = clarification.subAgentName,
+                state = SubAgentStatusState.WAITING_FOR_USER,
+                details = "Waiting for User input...",
+                progress = 0.5f
+            )
+            isHermes -> ActiveSubAgentStatus(
+                agentName = "Hermes-01",
+                state = SubAgentStatusState.PROCESSING,
+                details = hermesStat.ifBlank { "Executing tool loop..." },
+                progress = 0.8f
+            )
+            subAgent != null -> ActiveSubAgentStatus(
+                agentName = subAgent.first,
+                state = SubAgentStatusState.PROCESSING,
+                details = subAgent.second,
+                progress = subAgent.third
+            )
+            sentinelActive -> ActiveSubAgentStatus(
+                agentName = "Sentinel Guard",
+                state = SubAgentStatusState.PROCESSING,
+                details = "Proactive radar listening...",
+                progress = 0.2f
+            )
+            else -> ActiveSubAgentStatus(
+                agentName = "Agent Smith Core",
+                state = SubAgentStatusState.IDLE,
+                details = "Idle - Ready",
+                progress = 0.0f
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ActiveSubAgentStatus())
 
     private val _providerModels = MutableStateFlow<List<Pair<String, String>>>(emptyList())
     val providerModels = _providerModels.asStateFlow()

@@ -179,6 +179,7 @@ fun ChatScreen(
     val terminalLogs by viewModel.terminalLogs.collectAsState()
     val isTerminalExpanded by viewModel.isTerminalExpanded.collectAsState()
     val activeClarification by viewModel.activeClarification.collectAsState()
+    val activeSubAgentStatus by viewModel.activeSubAgentStatus.collectAsState()
 
     val delegationTree by viewModel.currentDelegationTree.collectAsState()
     val swarmState by viewModel.currentSwarmState.collectAsState()
@@ -465,6 +466,7 @@ fun ChatScreen(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         logs = terminalLogs,
                         isExpanded = isTerminalExpanded,
+                        subAgentStatus = activeSubAgentStatus,
                         onToggleExpand = { viewModel.toggleTerminalExpanded() },
                         onExecuteCommand = { cmd -> viewModel.executeTerminalCommand(cmd) },
                         onClearLogs = { viewModel.clearTerminalLogs() },
@@ -590,17 +592,30 @@ fun ChatScreen(
                             onOpenAllProviders = { viewModel.sendMessage("/options") }
                         )
                     }
-                } else if (profile == null || !profile!!.onboardingCompleted) {
-                    Box(modifier = Modifier.padding(16.dp)) {
-                        OnboardingCard(
-                            onComplete = { name, email, phone ->
-                                onboardingViewModel.saveProfile(name, email, phone)
-                            }
-                        )
-                    }
                 } else {
                     Column(modifier = Modifier.fillMaxSize()) {
                         DistributedApiNodeMonitorDashboard(nodeStatuses = nodeStatuses)
+
+                        if (profile == null || !profile!!.onboardingCompleted) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                OnboardingCard(
+                                    onComplete = { name, email, phone ->
+                                        val finalName = name.ifBlank { "Thomas Anderson" }
+                                        val finalEmail = email.ifBlank { "user@matrix.ai" }
+                                        val finalPhone = phone.ifBlank { "+1-555-0199" }
+                                        onboardingViewModel.saveProfile(finalName, finalEmail, finalPhone)
+                                    },
+                                    onSkip = {
+                                        onboardingViewModel.saveProfile("Thomas Anderson", "user@matrix.ai", "+1-555-0199")
+                                    }
+                                )
+                            }
+                        }
+
                         LazyColumn(
                             state = listState,
                             modifier = Modifier

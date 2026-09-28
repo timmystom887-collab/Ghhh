@@ -10,6 +10,19 @@ data class SubAgentClarificationRequest(
     val timestamp: Long = System.currentTimeMillis()
 )
 
+enum class SubAgentStatusState {
+    IDLE,
+    PROCESSING,
+    WAITING_FOR_USER
+}
+
+data class ActiveSubAgentStatus(
+    val agentName: String = "Agent Smith Core",
+    val state: SubAgentStatusState = SubAgentStatusState.IDLE,
+    val details: String = "Ready for directives",
+    val progress: Float = 0f
+)
+
 data class TerminalLogEntry(
     val id: String = java.util.UUID.randomUUID().toString(),
     val timestamp: String = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date()),

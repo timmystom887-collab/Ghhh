@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
@@ -27,12 +28,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +59,7 @@ import com.example.agent.ui.theme.MatrixTextSecondary
 @Composable
 fun OnboardingCard(
     onComplete: (String, String, String) -> Unit,
+    onSkip: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var step by remember { mutableStateOf(1) }
@@ -80,34 +84,51 @@ fun OnboardingCard(
             .padding(20.dp)
             .semantics { contentDescription = "Agent Onboarding Card" }
     ) {
-        // Header
+        // Header with Close / Skip button
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Surface(
-                shape = CircleShape,
-                color = MatrixGreenPrimary.copy(alpha = 0.15f),
-                modifier = Modifier.size(36.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MatrixGreenPrimary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = null,
+                        tint = MatrixGreenPrimary,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = "Welcome to Agent Smith",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MatrixGreenPrimary
+                    )
+                    Text(
+                        text = "Step $step of 3 • Autonomous Assistant Setup",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MatrixTextSecondary
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = onSkip,
+                modifier = Modifier.testTag("onboarding_close_button")
             ) {
                 Icon(
-                    imageVector = Icons.Default.Security,
-                    contentDescription = null,
-                    tint = MatrixGreenPrimary,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            Column {
-                Text(
-                    text = "Welcome to Agent Smith",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MatrixGreenPrimary
-                )
-                Text(
-                    text = "Step $step of 3 • Autonomous Assistant Setup",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MatrixTextSecondary
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Skip Onboarding",
+                    tint = MatrixTextSecondary
                 )
             }
         }
@@ -163,17 +184,29 @@ fun OnboardingCard(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = { step = 2 },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MatrixGreenPrimary,
-                        contentColor = MatrixBlack
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("onboarding_step1_next_button")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Continue to Permissions")
+                    OutlinedButton(
+                        onClick = onSkip,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MatrixTextSecondary),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Skip Setup")
+                    }
+                    Button(
+                        onClick = { step = 2 },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MatrixGreenPrimary,
+                            contentColor = MatrixBlack
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("onboarding_step1_next_button")
+                    ) {
+                        Text("Continue")
+                    }
                 }
             }
 

@@ -52,6 +52,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.agent.data.model.ActiveSubAgentStatus
+import com.example.agent.data.model.SubAgentStatusState
 import com.example.agent.data.model.TerminalLogEntry
 import com.example.agent.ui.theme.MatrixBlack
 import com.example.agent.ui.theme.MatrixBorder
@@ -66,6 +68,7 @@ fun MatrixTerminalConsole(
     modifier: Modifier = Modifier,
     logs: List<TerminalLogEntry>,
     isExpanded: Boolean,
+    subAgentStatus: ActiveSubAgentStatus = ActiveSubAgentStatus(),
     onToggleExpand: () -> Unit,
     onExecuteCommand: (String) -> Unit,
     onClearLogs: () -> Unit,
@@ -78,6 +81,19 @@ fun MatrixTerminalConsole(
         if (logs.isNotEmpty() && isExpanded) {
             listState.animateScrollToItem(logs.size - 1)
         }
+    }
+
+    // Determine visual status colors and label
+    val statusColor = when (subAgentStatus.state) {
+        SubAgentStatusState.IDLE -> MatrixGreenPrimary
+        SubAgentStatusState.PROCESSING -> Color(0xFF00E5FF)
+        SubAgentStatusState.WAITING_FOR_USER -> Color(0xFFFFD600)
+    }
+
+    val statusLabel = when (subAgentStatus.state) {
+        SubAgentStatusState.IDLE -> "Idle"
+        SubAgentStatusState.PROCESSING -> "Processing"
+        SubAgentStatusState.WAITING_FOR_USER -> "Waiting for User"
     }
 
     Surface(
@@ -103,30 +119,53 @@ fun MatrixTerminalConsole(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { onToggleExpand() }
+                    modifier = Modifier
+                        .clickable { onToggleExpand() }
+                        .weight(1f, fill = false)
                 ) {
                     Box(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
-                            .background(MatrixGreenPrimary)
+                            .background(statusColor)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "ROOT@AGENT-SMITH:~#",
                         color = MatrixGreenPrimary,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
                         modifier = Modifier.testTag("terminal_header_title")
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = if (isExpanded) "[LOGS OPEN]" else "[MINIMIZED]",
-                        color = MatrixTextSecondary,
-                        fontSize = 10.sp,
-                        fontFamily = FontFamily.Monospace
-                    )
+
+                    // Sub-Agent Visual Indicator Pill
+                    Box(
+                        modifier = Modifier
+                            .background(statusColor.copy(alpha = 0.18f), RoundedCornerShape(6.dp))
+                            .border(1.dp, statusColor.copy(alpha = 0.8f), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                            .testTag("terminal_subagent_indicator")
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(statusColor)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "[${subAgentStatus.agentName}: $statusLabel]",
+                                color = statusColor,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.testTag("terminal_subagent_status_text")
+                            )
+                        }
+                    }
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
