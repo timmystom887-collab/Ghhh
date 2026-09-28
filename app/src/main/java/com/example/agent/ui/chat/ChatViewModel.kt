@@ -14,6 +14,8 @@ import com.example.agent.data.model.McpServer
 import com.example.agent.data.model.McpTool
 import com.example.agent.data.model.McpWebRepository
 import com.example.agent.data.repository.AgentRepository
+import com.example.agent.data.model.SubAgentClarificationRequest
+import com.example.agent.data.model.TerminalLogEntry
 import com.example.agent.service.BatteryMonitorService
 import com.example.agent.ui.chat.components.PhoneCallMission
 import com.example.agent.ui.chat.components.SmithReplica
@@ -58,6 +60,18 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     val preCognitionEngine = PreCognitionEngine(application, database)
     val thinkingMethodEngine = com.example.agent.util.ThinkingMethodEngine(application)
     val automatedSystemEngine = com.example.agent.util.AutomatedSystemEngine(application, database)
+    val hermesAgentLoop = com.example.agent.domain.hermes.HermesAgentLoop(repository, toolRegistry)
+    val deepResearchAgent = com.example.agent.domain.research.DeepResearchAgent(repository)
+
+    val hermesLiveSteps = hermesAgentLoop.liveExecutionSteps
+    private val _latestResearchDossier = MutableStateFlow<com.example.agent.domain.research.ResearchDossier?>(null)
+    val latestResearchDossier: StateFlow<com.example.agent.domain.research.ResearchDossier?> = _latestResearchDossier.asStateFlow()
+
+    private val _isHermesProcessing = MutableStateFlow(false)
+    val isHermesProcessing: StateFlow<Boolean> = _isHermesProcessing.asStateFlow()
+
+    private val _hermesStatus = MutableStateFlow("")
+    val hermesStatus: StateFlow<String> = _hermesStatus.asStateFlow()
 
     val thinkingMethods = thinkingMethodEngine.methods
     val activeThinkingMethod = repository.preferencesManager.activeThinkingMethod
@@ -261,6 +275,25 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _ambientTranscript = MutableStateFlow("")
     val ambientTranscript = _ambientTranscript.asStateFlow()
+
+    // Floating Matrix Terminal & Console State
+    private val _terminalLogs = MutableStateFlow<List<TerminalLogEntry>>(
+        listOf(
+            TerminalLogEntry(source = "SYS", text = "MATRIX COMMAND INTERFACE ONLINE [v3.5]"),
+            TerminalLogEntry(source = "SYS", text = "Type /help or use chips below to invoke sub-agent workflows.")
+        )
+    )
+    val terminalLogs: StateFlow<List<TerminalLogEntry>> = _terminalLogs.asStateFlow()
+
+    private val _isTerminalExpanded = MutableStateFlow(false)
+    val isTerminalExpanded: StateFlow<Boolean> = _isTerminalExpanded.asStateFlow()
+
+    // Sub-Agent Interactive Clarification Popup State
+    private val _activeClarification = MutableStateFlow<SubAgentClarificationRequest?>(null)
+    val activeClarification: StateFlow<SubAgentClarificationRequest?> = _activeClarification.asStateFlow()
+
+    private val _clarificationHistory = MutableStateFlow<List<Pair<SubAgentClarificationRequest, String>>>(emptyList())
+    val clarificationHistory: StateFlow<List<Pair<SubAgentClarificationRequest, String>>> = _clarificationHistory.asStateFlow()
 
     private val _providerModels = MutableStateFlow<List<Pair<String, String>>>(emptyList())
     val providerModels = _providerModels.asStateFlow()
@@ -709,6 +742,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 val preds = preCognitionEngine.evaluatePredictiveWorkflows(isLowBattery.value, ambientTranscript.value)
                 _preCognitionPredictions.value = preds
                 repository.insertMessage(MessageEntity(sender = "agent", content = "Opening Temporal Pre-Cognition Workflow Engine", type = "pre_cognition"))
+                return@launch
+            }
+
+            if (lower.startsWith("/hermes") || lower.startsWith("/agentic") || lower.startsWith("/functioncall")) {
+                val goal = text.removePrefix("/hermes").removePrefix("/agentic").removePrefix("/functioncall").trim()
+                if (goal.isNotBlank()) {
+                    runHermesGoal(goal)
+                } else {
+                    repository.insertMessage(MessageEntity(sender = "agent", content = "Opening Hermes Agentic Multi-Turn Hub & XML Tool Protocol", type = "hermes_agent"))
+                }
                 return@launch
             }
 
@@ -1334,6 +1377,65 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun runHermesGoal(goal: String) {
+        viewModelScope.launch {
+            _isHermesProcessing.value = true
+            _hermesStatus.value = "Executing Hermes Multi-Turn Tool Loop..."
+            repository.insertMessage(MessageEntity(sender = "user", content = "/hermes $goal"))
+            try {
+                val result = hermesAgentLoop.executeGoal(goal, activeModel.value)
+                repository.insertMessage(
+                    MessageEntity(
+                        sender = "agent",
+                        content = result.finalResponse,
+                        type = "hermes_agent"
+                    )
+                )
+            } catch (e: Exception) {
+                repository.insertMessage(
+                    MessageEntity(
+                        sender = "agent",
+                        content = "Hermes execution error: ${e.localizedMessage}",
+                        type = "hermes_agent"
+                    )
+                )
+            } finally {
+                _isHermesProcessing.value = false
+                _hermesStatus.value = ""
+            }
+        }
+    }
+
+    fun runHermesDeepResearch(topic: String) {
+        viewModelScope.launch {
+            _isHermesProcessing.value = true
+            _hermesStatus.value = "Conducting Multi-Vector Deep Research on '$topic'..."
+            repository.insertMessage(MessageEntity(sender = "user", content = "/deepresearch $topic"))
+            try {
+                val dossier = deepResearchAgent.conductDeepResearch(topic, activeModel.value)
+                _latestResearchDossier.value = dossier
+                repository.insertMessage(
+                    MessageEntity(
+                        sender = "agent",
+                        content = dossier.fullMarkdownReport,
+                        type = "deep_research"
+                    )
+                )
+            } catch (e: Exception) {
+                repository.insertMessage(
+                    MessageEntity(
+                        sender = "agent",
+                        content = "Deep research error: ${e.localizedMessage}",
+                        type = "deep_research"
+                    )
+                )
+            } finally {
+                _isHermesProcessing.value = false
+                _hermesStatus.value = ""
+            }
+        }
+    }
+
     fun triggerDeepResearch(topic: String) {
         viewModelScope.launch {
             repository.insertMessage(MessageEntity(sender = "system", content = "🔍 Initializing Matrix Sub-Agent Cluster for: '$topic'..."))
@@ -1778,5 +1880,206 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             androidx.work.ExistingWorkPolicy.REPLACE,
             workRequest
         )
+    }
+
+    fun toggleTerminalExpanded() {
+        _isTerminalExpanded.value = !_isTerminalExpanded.value
+    }
+
+    fun addTerminalLog(source: String, text: String, isError: Boolean = false, isCommand: Boolean = false) {
+        val newEntry = TerminalLogEntry(
+            source = source,
+            text = text,
+            isError = isError,
+            isCommand = isCommand
+        )
+        _terminalLogs.value = (_terminalLogs.value + newEntry).takeLast(60)
+    }
+
+    fun clearTerminalLogs() {
+        _terminalLogs.value = listOf(
+            TerminalLogEntry(source = "SYS", text = "CONSOLE CLEARED. MATRIX TERMINAL READY.")
+        )
+    }
+
+    fun requestSubAgentClarification(
+        subAgentName: String,
+        subAgentRole: String,
+        question: String,
+        options: List<String> = emptyList(),
+        contextSnippet: String = ""
+    ) {
+        val req = SubAgentClarificationRequest(
+            subAgentName = subAgentName,
+            subAgentRole = subAgentRole,
+            question = question,
+            suggestedOptions = options,
+            contextSnippet = contextSnippet
+        )
+        _activeClarification.value = req
+        addTerminalLog(
+            source = "SUB-AGENT",
+            text = "❓ [${subAgentName}] Clarification requested: \"${question}\"",
+            isError = false
+        )
+        playSoundEffect("ALERT_GLITCH", isCritical = true)
+    }
+
+    fun submitClarificationResponse(request: SubAgentClarificationRequest, responseText: String) {
+        if (responseText.isBlank()) return
+        
+        _clarificationHistory.value = _clarificationHistory.value + Pair(request, responseText)
+        _activeClarification.value = null
+
+        addTerminalLog(
+            source = "USER",
+            text = "💬 Response sent to [${request.subAgentName}]: \"$responseText\"",
+            isCommand = true
+        )
+
+        playSoundEffect("PRIORITY_BOOST")
+
+        viewModelScope.launch {
+            repository.insertMessage(
+                MessageEntity(
+                    sender = "system",
+                    content = "💡 **Sub-Agent Decision Received (${request.subAgentName}):**\n\"$responseText\"\nResuming sub-agent workflow execution...",
+                    type = "subagent_clarification"
+                )
+            )
+
+            delay(600)
+            addTerminalLog(
+                source = request.subAgentName.uppercase(),
+                text = "⚡ Clarification integrated. Proceeding with sub-agent execution loop."
+            )
+
+            when {
+                request.subAgentName.contains("Hermes", ignoreCase = true) -> {
+                    runHermesGoal("Continue execution with user preference: $responseText")
+                }
+                request.subAgentName.contains("Research", ignoreCase = true) -> {
+                    runHermesDeepResearch("Refined research direction: $responseText")
+                }
+                request.subAgentName.contains("Swarm", ignoreCase = true) -> {
+                    triggerSmithSwarm("Refined sub-task: $responseText")
+                }
+                else -> {
+                    sendMessage("Sub-agent (${request.subAgentName}) decision: $responseText")
+                }
+            }
+        }
+    }
+
+    fun dismissClarification() {
+        _activeClarification.value = null
+        addTerminalLog(source = "SYS", text = "Sub-agent clarification request dismissed by operator.")
+    }
+
+    fun triggerSampleClarification(subAgentType: String = "Hermes-01") {
+        when (subAgentType.lowercase()) {
+            "research" -> requestSubAgentClarification(
+                subAgentName = "Research-Specialist-02",
+                subAgentRole = "Multi-Vector Deep Research Node",
+                question = "Should I prioritize current 2026 real-time search data or restrict extraction to local Room database memories?",
+                options = listOf("2026 Real-Time Web Data", "Local Room Memories", "Hybrid Dual Search")
+            )
+            "swarm" -> requestSubAgentClarification(
+                subAgentName = "Smith-Swarm-Replica 3",
+                subAgentRole = "Task Partitioning Hive Unit",
+                question = "Target execution requires dynamic tool synthesis. Do you approve auto-generating a new custom MCP tool for this action?",
+                options = listOf("Approve Dynamic MCP Tool", "Use Standard System Tools Only", "Ask Again Later")
+            )
+            else -> requestSubAgentClarification(
+                subAgentName = "Hermes-Agent-01",
+                subAgentRole = "Autonomous Multi-Turn Tool Loop",
+                question = "I encountered ambiguity regarding user privacy parameters during execution. Should I encrypt output before storing to database?",
+                options = listOf("Encrypt Output (AES-256)", "Store Standard Text", "Bypass Local Persistence")
+            )
+        }
+    }
+
+    fun executeTerminalCommand(rawInput: String) {
+        val input = rawInput.trim()
+        if (input.isBlank()) return
+
+        addTerminalLog(source = "USER", text = "> $input", isCommand = true)
+        playSoundEffect("NEURAL_KEYSTROKE")
+
+        val parts = input.split("\\s+".toRegex())
+        val cmd = parts[0].lowercase()
+        val arg = if (parts.size > 1) parts.drop(1).joinToString(" ") else ""
+
+        when {
+            cmd == "/help" || cmd == "help" -> {
+                addTerminalLog(source = "SYS", text = "AVAILABLE TERMINAL COMMANDS:")
+                addTerminalLog(source = "SYS", text = "• /hermes <goal> - Trigger Hermes autonomous tool loop")
+                addTerminalLog(source = "SYS", text = "• /research <topic> - Conduct deep multi-vector research")
+                addTerminalLog(source = "SYS", text = "• /swarm <task> - Replicate Smith Swarm hive-mind for task")
+                addTerminalLog(source = "SYS", text = "• /ask or /clarify - Trigger a sub-agent clarification prompt")
+                addTerminalLog(source = "SYS", text = "• /call <phone> <mission> - Trigger Ghost Operator Phone Agent")
+                addTerminalLog(source = "SYS", text = "• /sentinel - Toggle Always-On Proactive Sentinel mode")
+                addTerminalLog(source = "SYS", text = "• /skill <name> - Synthesize new MCP skill dynamically")
+                addTerminalLog(source = "SYS", text = "• /clear - Clear terminal console logs")
+            }
+            cmd == "/clear" -> {
+                clearTerminalLogs()
+            }
+            cmd == "/hermes" -> {
+                if (arg.isBlank()) {
+                    addTerminalLog(source = "HERMES", text = "Error: Please specify a goal. Example: /hermes Audit system state", isError = true)
+                } else {
+                    addTerminalLog(source = "HERMES", text = "Initiating Hermes Autonomous Tool Loop for: $arg")
+                    runHermesGoal(arg)
+                }
+            }
+            cmd == "/research" || cmd == "/deepresearch" -> {
+                if (arg.isBlank()) {
+                    addTerminalLog(source = "RESEARCH", text = "Error: Specify research topic. Example: /research Quantum Encryption", isError = true)
+                } else {
+                    addTerminalLog(source = "RESEARCH", text = "Launching Deep Research Agent for: $arg")
+                    runHermesDeepResearch(arg)
+                }
+            }
+            cmd == "/swarm" -> {
+                if (arg.isBlank()) {
+                    addTerminalLog(source = "SWARM", text = "Error: Specify swarm task. Example: /swarm Analyze threats", isError = true)
+                } else {
+                    addTerminalLog(source = "SWARM", text = "Replicating Smith Swarm hive nodes for: $arg")
+                    triggerSmithSwarm(arg)
+                }
+            }
+            cmd == "/ask" || cmd == "/clarify" || cmd == "/clarification" -> {
+                addTerminalLog(source = "SYS", text = "Simulating sub-agent clarification request popup...")
+                triggerSampleClarification(if (arg.isNotBlank()) arg else "hermes")
+            }
+            cmd == "/sentinel" -> {
+                val nextState = !isSentinelModeActive.value
+                toggleSentinelMode(nextState)
+                addTerminalLog(source = "SENTINEL", text = "Sentinel mode toggled. Active: $nextState")
+            }
+            cmd == "/skill" -> {
+                if (arg.isBlank()) {
+                    addTerminalLog(source = "SYS", text = "Error: Specify skill requirement. Example: /skill Weather API", isError = true)
+                } else {
+                    addTerminalLog(source = "SYS", text = "Synthesizing dynamic MCP skill for: $arg")
+                    synthesizeMcpSkill(arg)
+                }
+            }
+            cmd == "/call" -> {
+                val callParts = arg.split("\\s+".toRegex())
+                val phone = callParts.getOrNull(0) ?: "+15550199"
+                addTerminalLog(source = "CALL", text = "Initiating Ghost Phone Agent call to $phone")
+                executePhoneCall(phone)
+            }
+            else -> {
+                if (input.startsWith("/")) {
+                    addTerminalLog(source = "SYS", text = "Unknown command '$cmd'. Type /help for available commands.", isError = true)
+                } else {
+                    addTerminalLog(source = "AGENT", text = "Routing prompt to Agent Smith core reasoning engine...")
+                    sendMessage(input)
+                }
+            }
+        }
     }
 }

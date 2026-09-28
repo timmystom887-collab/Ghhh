@@ -62,7 +62,8 @@ fun QuickActionsRow(
     onOpenToolsMenu: () -> Unit,
     onOpenThinkingMethods: () -> Unit = {},
     onOpenAutomatedSystems: () -> Unit = {},
-    onTriggerGhostCall: () -> Unit = {}
+    onTriggerGhostCall: () -> Unit = {},
+    onOpenHermesAgent: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var torchOn by remember { mutableStateOf(false) }
@@ -90,6 +91,24 @@ fun QuickActionsRow(
             .horizontalScroll(rememberScrollState())
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
+        FilterChip(
+            selected = false,
+            onClick = onOpenHermesAgent,
+            label = { Text("⚡ Hermes Agent") },
+            leadingIcon = { Icon(Icons.Default.AutoAwesome, contentDescription = "Hermes Agent") },
+            colors = chipColors,
+            border = chipBorder
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        FilterChip(
+            selected = false,
+            onClick = onTriggerDeepResearch,
+            label = { Text("🔬 Deep Research") },
+            leadingIcon = { Icon(Icons.Default.AutoAwesome, contentDescription = "Deep Research") },
+            colors = chipColors,
+            border = chipBorder
+        )
+        Spacer(modifier = Modifier.width(6.dp))
         FilterChip(
             selected = false,
             onClick = onOpenThinkingMethods,

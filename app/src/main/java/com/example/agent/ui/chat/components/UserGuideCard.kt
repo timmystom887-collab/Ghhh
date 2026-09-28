@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -97,7 +99,7 @@ fun UserGuideCard(
                 )
             }
             Text(
-                text = "HTML v3.5",
+                text = "HTML v4.5 (HERMES)",
                 style = MaterialTheme.typography.labelSmall,
                 color = MatrixTextSecondary
             )
@@ -105,7 +107,7 @@ fun UserGuideCard(
 
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Comprehensive classified documentation covering real phone calls, MCP tool synthesis, local SLM setup, and RAG knowledge vault.",
+            text = "Comprehensive classified documentation covering Hermes XML tool calling, Deep Research agents, battery governance, real phone calls, MCP tool synthesis, and KeyStore encryption.",
             style = MaterialTheme.typography.bodySmall,
             color = MatrixTextSecondary
         )
@@ -121,12 +123,14 @@ fun UserGuideCard(
         Spacer(modifier = Modifier.height(6.dp))
 
         val topicButtons = listOf(
-            Triple("🧠 Thinking Methods", Icons.Default.AutoAwesome, "thinking"),
-            Triple("⚙️ Automated Logic", Icons.Default.Settings, "automation"),
-            Triple("🏛️ System Architecture", Icons.Default.Hub, "architecture"),
-            Triple("📞 Autonomous Phone Calls", Icons.Default.Call, "voice-phone"),
-            Triple("🌐 MCP Tool Synthesis", Icons.Default.Code, "mcp-skills"),
-            Triple("📚 Neural Knowledge Vault", Icons.Default.Storage, "knowledge-vault")
+            Triple("⚡ Hermes Agent", Icons.Default.AutoAwesome, "hermes-protocol"),
+            Triple("🔬 Deep Research", Icons.Default.Search, "deep-research"),
+            Triple("🔋 Battery Monitor", Icons.Default.Settings, "power-governance"),
+            Triple("🧠 Thinking Routines", Icons.Default.Psychology, "thinking-engine"),
+            Triple("👁️ Cognitive Routines", Icons.Default.Hub, "cognitive-engine"),
+            Triple("🔒 KeyStore Security", Icons.Default.Code, "keystore-security"),
+            Triple("📞 Autonomous Calls", Icons.Default.Call, "telephony-voice"),
+            Triple("🌐 MCP Tool Synthesis", Icons.Default.Storage, "mcp-synthesis")
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {

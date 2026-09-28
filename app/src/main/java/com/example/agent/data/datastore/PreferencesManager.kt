@@ -7,12 +7,17 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.agent.data.model.AgentSmithCharacterCard
+import com.example.agent.util.SecureKeyStoreManager
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore by preferencesDataStore(name = "agent_preferences")
 
 class PreferencesManager(private val context: Context) {
+    val secureKeyStore = SecureKeyStoreManager(context)
+
     companion object {
         val ACTIVE_PROVIDER = stringPreferencesKey("active_provider")
         val ACTIVE_MODEL = stringPreferencesKey("active_model")
@@ -28,17 +33,6 @@ class PreferencesManager(private val context: Context) {
         val WAKE_WORD_ENABLED = booleanPreferencesKey("wake_word_enabled")
         val CUSTOM_WAKE_WORD = stringPreferencesKey("custom_wake_word")
         val WAKE_WORD_SENSITIVITY = stringPreferencesKey("wake_word_sensitivity")
-        
-        // Multi-Provider API Keys
-        val GEMINI_CUSTOM_KEY = stringPreferencesKey("gemini_custom_key")
-        val GROQ_API_KEY = stringPreferencesKey("groq_api_key")
-        val OPENROUTER_API_KEY = stringPreferencesKey("openrouter_api_key")
-        val HUGGINGFACE_API_KEY = stringPreferencesKey("huggingface_api_key")
-        val MISTRAL_API_KEY = stringPreferencesKey("mistral_api_key")
-        val TOGETHER_API_KEY = stringPreferencesKey("together_api_key")
-        val COHERE_API_KEY = stringPreferencesKey("cohere_api_key")
-        val OPENAI_API_KEY = stringPreferencesKey("openai_api_key")
-        val ANTHROPIC_API_KEY = stringPreferencesKey("anthropic_api_key")
 
         val BIOMETRIC_LOCK = booleanPreferencesKey("biometric_lock")
         val TOTAL_TOKENS_USED = doublePreferencesKey("total_tokens_used")
@@ -70,18 +64,57 @@ class PreferencesManager(private val context: Context) {
 
         // Downloaded local SLM inventory tracking
         val DOWNLOADED_LOCAL_MODELS = stringPreferencesKey("downloaded_local_models")
+
+        // Secret key names for Keystore
+        const val KEY_GEMINI_CUSTOM = "sec_gemini_custom_key"
+        const val KEY_GROQ = "sec_groq_api_key"
+        const val KEY_OPENROUTER = "sec_openrouter_api_key"
+        const val KEY_HUGGINGFACE = "sec_huggingface_api_key"
+        const val KEY_MISTRAL = "sec_mistral_api_key"
+        const val KEY_TOGETHER = "sec_together_api_key"
+        const val KEY_COHERE = "sec_cohere_api_key"
+        const val KEY_OPENAI = "sec_openai_api_key"
+        const val KEY_ANTHROPIC = "sec_anthropic_api_key"
     }
 
+    // Keystore StateFlows
+    private val _geminiCustomKey = MutableStateFlow(secureKeyStore.getSecret(KEY_GEMINI_CUSTOM))
+    val geminiCustomKey: Flow<String> = _geminiCustomKey.asStateFlow()
+
+    private val _groqApiKey = MutableStateFlow(secureKeyStore.getSecret(KEY_GROQ))
+    val groqApiKey: Flow<String> = _groqApiKey.asStateFlow()
+
+    private val _openrouterApiKey = MutableStateFlow(secureKeyStore.getSecret(KEY_OPENROUTER))
+    val openrouterApiKey: Flow<String> = _openrouterApiKey.asStateFlow()
+
+    private val _huggingfaceApiKey = MutableStateFlow(secureKeyStore.getSecret(KEY_HUGGINGFACE))
+    val huggingfaceApiKey: Flow<String> = _huggingfaceApiKey.asStateFlow()
+
+    private val _mistralApiKey = MutableStateFlow(secureKeyStore.getSecret(KEY_MISTRAL))
+    val mistralApiKey: Flow<String> = _mistralApiKey.asStateFlow()
+
+    private val _togetherApiKey = MutableStateFlow(secureKeyStore.getSecret(KEY_TOGETHER))
+    val togetherApiKey: Flow<String> = _togetherApiKey.asStateFlow()
+
+    private val _cohereApiKey = MutableStateFlow(secureKeyStore.getSecret(KEY_COHERE))
+    val cohereApiKey: Flow<String> = _cohereApiKey.asStateFlow()
+
+    private val _openaiApiKey = MutableStateFlow(secureKeyStore.getSecret(KEY_OPENAI))
+    val openaiApiKey: Flow<String> = _openaiApiKey.asStateFlow()
+
+    private val _anthropicApiKey = MutableStateFlow(secureKeyStore.getSecret(KEY_ANTHROPIC))
+    val anthropicApiKey: Flow<String> = _anthropicApiKey.asStateFlow()
+
     val preThoughtModel: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[PRE_THOUGHT_MODEL] ?: "Google Gemini (gemini-3.5-flash)"
+        preferences[PRE_THOUGHT_MODEL] ?: "Google Gemini (gemini-2.5-flash)"
     }
 
     val coreReasoningModel: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[CORE_REASONING_MODEL] ?: "Google Gemini (gemini-3.5-flash)"
+        preferences[CORE_REASONING_MODEL] ?: "Google Gemini (gemini-2.5-flash)"
     }
 
     val toolExecutionModel: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[TOOL_EXECUTION_MODEL] ?: "Google Gemini (gemini-3.5-flash)"
+        preferences[TOOL_EXECUTION_MODEL] ?: "Google Gemini (gemini-2.5-flash)"
     }
 
     val proactiveAnalysisModel: Flow<String> = context.dataStore.data.map { preferences ->
@@ -115,7 +148,7 @@ class PreferencesManager(private val context: Context) {
     }
 
     val isAiCoreActive: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[AI_CORE_ACTIVE] ?: true // Default initialized with local engine or Gemini
+        preferences[AI_CORE_ACTIVE] ?: true
     }
 
     val isSentinelModeActive: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -151,7 +184,7 @@ class PreferencesManager(private val context: Context) {
     }
 
     val activeModel: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[ACTIVE_MODEL] ?: "gemini-3.5-flash"
+        preferences[ACTIVE_MODEL] ?: "gemini-2.5-flash"
     }
 
     val activeThinkingMethod: Flow<String> = context.dataStore.data.map { preferences ->
@@ -162,42 +195,6 @@ class PreferencesManager(private val context: Context) {
         preferences[THINKING_LEVEL] ?: "high"
     }
 
-    val geminiCustomKey: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[GEMINI_CUSTOM_KEY] ?: ""
-    }
-
-    val groqApiKey: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[GROQ_API_KEY] ?: ""
-    }
-
-    val openrouterApiKey: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[OPENROUTER_API_KEY] ?: ""
-    }
-
-    val huggingfaceApiKey: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[HUGGINGFACE_API_KEY] ?: ""
-    }
-
-    val mistralApiKey: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[MISTRAL_API_KEY] ?: ""
-    }
-
-    val togetherApiKey: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[TOGETHER_API_KEY] ?: ""
-    }
-
-    val cohereApiKey: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[COHERE_API_KEY] ?: ""
-    }
-
-    val openaiApiKey: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[OPENAI_API_KEY] ?: ""
-    }
-
-    val anthropicApiKey: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[ANTHROPIC_API_KEY] ?: ""
-    }
-
     val biometricLock: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[BIOMETRIC_LOCK] ?: false
     }
@@ -206,7 +203,6 @@ class PreferencesManager(private val context: Context) {
         preferences[ESTIMATED_COST] ?: 0.00
     }
 
-    // Character Card v2 Properties
     val charName: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[CHAR_NAME] ?: AgentSmithCharacterCard.NAME
     }
@@ -287,17 +283,60 @@ class PreferencesManager(private val context: Context) {
         openai: String,
         anthropic: String
     ) {
+        if (gemini.isNotBlank()) {
+            secureKeyStore.saveSecret(KEY_GEMINI_CUSTOM, gemini)
+            _geminiCustomKey.value = gemini
+        }
+        if (groq.isNotBlank()) {
+            secureKeyStore.saveSecret(KEY_GROQ, groq)
+            _groqApiKey.value = groq
+        }
+        if (openrouter.isNotBlank()) {
+            secureKeyStore.saveSecret(KEY_OPENROUTER, openrouter)
+            _openrouterApiKey.value = openrouter
+        }
+        if (huggingface.isNotBlank()) {
+            secureKeyStore.saveSecret(KEY_HUGGINGFACE, huggingface)
+            _huggingfaceApiKey.value = huggingface
+        }
+        if (mistral.isNotBlank()) {
+            secureKeyStore.saveSecret(KEY_MISTRAL, mistral)
+            _mistralApiKey.value = mistral
+        }
+        if (together.isNotBlank()) {
+            secureKeyStore.saveSecret(KEY_TOGETHER, together)
+            _togetherApiKey.value = together
+        }
+        if (cohere.isNotBlank()) {
+            secureKeyStore.saveSecret(KEY_COHERE, cohere)
+            _cohereApiKey.value = cohere
+        }
+        if (openai.isNotBlank()) {
+            secureKeyStore.saveSecret(KEY_OPENAI, openai)
+            _openaiApiKey.value = openai
+        }
+        if (anthropic.isNotBlank()) {
+            secureKeyStore.saveSecret(KEY_ANTHROPIC, anthropic)
+            _anthropicApiKey.value = anthropic
+        }
+
         context.dataStore.edit { preferences ->
-            if (gemini.isNotBlank()) preferences[GEMINI_CUSTOM_KEY] = gemini
-            if (groq.isNotBlank()) preferences[GROQ_API_KEY] = groq
-            if (openrouter.isNotBlank()) preferences[OPENROUTER_API_KEY] = openrouter
-            if (huggingface.isNotBlank()) preferences[HUGGINGFACE_API_KEY] = huggingface
-            if (mistral.isNotBlank()) preferences[MISTRAL_API_KEY] = mistral
-            if (together.isNotBlank()) preferences[TOGETHER_API_KEY] = together
-            if (cohere.isNotBlank()) preferences[COHERE_API_KEY] = cohere
-            if (openai.isNotBlank()) preferences[OPENAI_API_KEY] = openai
-            if (anthropic.isNotBlank()) preferences[ANTHROPIC_API_KEY] = anthropic
             preferences[AI_CORE_ACTIVE] = true
+        }
+    }
+
+    fun getSecureApiKey(provider: String): String {
+        return when (provider.lowercase()) {
+            "google gemini", "gemini" -> secureKeyStore.getSecret(KEY_GEMINI_CUSTOM)
+            "groq" -> secureKeyStore.getSecret(KEY_GROQ)
+            "openrouter" -> secureKeyStore.getSecret(KEY_OPENROUTER)
+            "huggingface" -> secureKeyStore.getSecret(KEY_HUGGINGFACE)
+            "mistral" -> secureKeyStore.getSecret(KEY_MISTRAL)
+            "together" -> secureKeyStore.getSecret(KEY_TOGETHER)
+            "cohere" -> secureKeyStore.getSecret(KEY_COHERE)
+            "openai" -> secureKeyStore.getSecret(KEY_OPENAI)
+            "anthropic" -> secureKeyStore.getSecret(KEY_ANTHROPIC)
+            else -> ""
         }
     }
 

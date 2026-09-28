@@ -20,7 +20,6 @@ class LocalSlmStrategy(private val toolRegistry: MatrixToolRegistry? = null) : M
         val trimmed = prompt.trim()
         val lower = trimmed.lowercase()
 
-        // 1. DUMBER AI SHORTCOMINGS DISCLOSURE
         val disclosureBanner = """
             ⚠️ **[Local SLM - Core Warning System]**
             *Running 100% on-device private weights: Qwen 3 Q 1.7B.*
@@ -28,7 +27,6 @@ class LocalSlmStrategy(private val toolRegistry: MatrixToolRegistry? = null) : M
             ────────────────────────────────────────
         """.trimIndent()
 
-        // 2. TASK BREAKDOWN (DECOMPOSITION)
         val steps = mutableListOf<String>()
         steps.add("1. Initialize isolated on-device sandbox memory.")
         
@@ -71,7 +69,6 @@ class LocalSlmStrategy(private val toolRegistry: MatrixToolRegistry? = null) : M
             }
         }
 
-        // 2. SELF-REPROMPTING RE-THINKING LOOP (THOUGHT-CHAIN DECOMPOSITION)
         val thoughtChainLog = mutableListOf<String>()
         thoughtChainLog.add("🔄 **[Qwen 3 Thought-Chain Re-Prompting Core Initiated]**")
         
@@ -93,10 +90,8 @@ class LocalSlmStrategy(private val toolRegistry: MatrixToolRegistry? = null) : M
         thoughtChainLog.add("⚡ *[Inner Cycle 3: Sequential Compile]* -> Output: \"$reprompt3Result\"")
 
         val thoughtChainSection = thoughtChainLog.joinToString("\n") + "\n────────────────────────────────────────"
-
         val decompositionView = "🧠 **[Qwen 1.7B Multi-Step Task Decomposition Grid]**\n" + steps.joinToString("\n") + "\n────────────────────────────────────────"
 
-        // 3. ROBUST LOCAL TOOL CALLING (Intent Parser Pre-processor)
         var toolResult = ""
         val bodyReasoning = when {
             lower.contains("alarm") || lower.contains("wake") -> {
@@ -188,7 +183,7 @@ class LocalSlmStrategy(private val toolRegistry: MatrixToolRegistry? = null) : M
 
 class GeminiStrategy(
     private val customKey: String = "",
-    private val model: String = "gemini-3.5-flash",
+    private val model: String = "gemini-2.5-flash",
     private val thinkingLevel: String = "high"
 ) : ModelRoutingStrategy {
     override val providerName: String = "Google Gemini ($model)"
@@ -206,9 +201,9 @@ class GeminiStrategy(
             }.ifEmpty { "AIzaSyPlaceholderKey" }
 
             val targetModel = when {
-                model.contains("pro", ignoreCase = true) -> "gemini-3.1-pro-preview"
-                model.contains("flash", ignoreCase = true) -> "gemini-3.5-flash"
-                else -> "gemini-3.5-flash"
+                model.contains("pro", ignoreCase = true) -> "gemini-2.5-pro"
+                model.contains("flash", ignoreCase = true) -> "gemini-2.5-flash"
+                else -> "gemini-2.5-flash"
             }
 
             val request = com.example.agent.data.remote.ChatRequest(
@@ -323,7 +318,7 @@ class AnthropicStrategy(private val apiKey: String = "") : ModelRoutingStrategy 
 }
 
 class MultiApiStrategy(
-    private val preferredModel: String = "gemini-3.5-flash",
+    private val preferredModel: String = "gemini-2.5-flash",
     private val thinkingLevel: String = "high",
     private val toolRegistry: MatrixToolRegistry? = null
 ) : ModelRoutingStrategy {
@@ -333,17 +328,15 @@ class MultiApiStrategy(
         return coroutineScope {
             val task = prompt.trim()
 
-            // 1. Core Logic & Architecture -> Gemini Node
             val deferredGemini = this.async {
                 try {
-                    val strategy = GeminiStrategy(model = "models/gemini-2.5-flash", thinkingLevel = "low")
+                    val strategy = GeminiStrategy(model = "gemini-2.5-flash", thinkingLevel = "low")
                     strategy.execute("Analyze core logical requirements, data schemas, and primary constraints for task: $task")
                 } catch (e: Exception) {
                     "Logical core analysis successfully processed."
                 }
             }
 
-            // 2. High-Speed Execution Steps -> Groq Node
             val deferredGroq = this.async {
                 try {
                     val strategy = GroqStrategy()
@@ -353,7 +346,6 @@ class MultiApiStrategy(
                 }
             }
 
-            // 3. Security Guardrails & Edge Cases -> OpenRouter Node
             val deferredOpenRouter = this.async {
                 try {
                     val strategy = OpenRouterStrategy()
@@ -388,7 +380,7 @@ class MultiApiStrategy(
 class TaskOrchestrator(
     private val isOffline: Boolean = false,
     private val preferredProvider: String = "Google Gemini",
-    private val preferredModel: String = "gemini-3.5-flash",
+    private val preferredModel: String = "gemini-2.5-flash",
     private val thinkingLevel: String = "high",
     private val toolRegistry: MatrixToolRegistry? = null
 ) {
@@ -404,10 +396,8 @@ class TaskOrchestrator(
     }
 
     fun selectStrategy(complexity: TaskComplexity): ModelRoutingStrategy {
-        // Local SLM is strictly a backup/fallback for offline operations or emergency telemetry triggers
         if (isOffline) return LocalSlmStrategy(toolRegistry)
 
-        // Force cloud fallback if 'Local SLM' was selected while online, as local SLMs are strictly offline backups
         val provider = if (preferredProvider == "Local SLM") "Google Gemini" else preferredProvider
 
         return when (provider) {
@@ -421,10 +411,9 @@ class TaskOrchestrator(
             "Anthropic" -> AnthropicStrategy()
             "Multi-API" -> MultiApiStrategy(preferredModel, thinkingLevel, toolRegistry)
             else -> when (complexity) {
-                // Online normal operations always route low complexity and greetings to Cloud Gemini Strategy
-                TaskComplexity.LOW -> GeminiStrategy(model = "gemini-3.5-flash", thinkingLevel = "low")
+                TaskComplexity.LOW -> GeminiStrategy(model = "gemini-2.5-flash", thinkingLevel = "low")
                 TaskComplexity.MEDIUM -> GeminiStrategy(model = preferredModel, thinkingLevel = thinkingLevel)
-                TaskComplexity.HIGH -> GeminiStrategy(model = if (preferredModel.contains("pro")) "gemini-3.1-pro-preview" else "gemini-3.5-flash", thinkingLevel = "high")
+                TaskComplexity.HIGH -> GeminiStrategy(model = if (preferredModel.contains("pro")) "gemini-2.5-pro" else "gemini-2.5-flash", thinkingLevel = "high")
             }
         }
     }

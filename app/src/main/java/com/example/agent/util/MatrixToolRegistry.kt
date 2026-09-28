@@ -209,4 +209,18 @@ class MatrixToolRegistry(private val context: Context) {
         val report = "Matrix Node Status: NOMINAL | Time: $timeStr | Memory Used: ${usedMemMB}MB / ${maxMemMB}MB | Active Threads: ${Thread.activeCount()}"
         return ToolExecutionResult("system_diagnostics", true, report)
     }
+
+    fun executeTool(toolName: String, params: Map<String, String> = emptyMap()): String {
+        val result = when (toolName.lowercase()) {
+            "get_battery", "battery" -> getBatteryTelemetry()
+            "system_diagnostics", "diagnostics" -> getSystemDiagnostics()
+            "evaluate_math", "math", "calc" -> evaluateMath(params["expression"] ?: params["expr"] ?: "0")
+            "set_torch", "torch", "flashlight" -> setTorch(params["enabled"]?.toBoolean() ?: true)
+            "open_app", "app" -> openApp(params["app_name"] ?: params["name"] ?: "")
+            "send_sms", "sms" -> sendSms(params["phone_number"] ?: params["phone"] ?: "", params["message"] ?: params["text"] ?: "")
+            "make_call", "call" -> makeCall(params["phone_number"] ?: params["phone"] ?: "")
+            else -> ToolExecutionResult(toolName, false, "Unknown tool: $toolName")
+        }
+        return result.message
+    }
 }

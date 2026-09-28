@@ -13,9 +13,9 @@
       --matrix-gold: #FFD700;
       --matrix-red: #FF3366;
       --matrix-bg: #050806;
-      --matrix-card-bg: rgba(10, 24, 15, 0.85);
+      --matrix-card-bg: rgba(10, 24, 15, 0.88);
       --matrix-border: rgba(0, 255, 102, 0.3);
-      --matrix-border-hover: rgba(0, 255, 102, 0.8);
+      --matrix-border-hover: rgba(0, 255, 102, 0.85);
       --matrix-text: #E0FFE8;
       --matrix-muted: #7FA88B;
       --font-mono: "Fira Code", "Courier New", Courier, monospace;
@@ -38,7 +38,6 @@
       background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 102, 0.08) 0%, transparent 70%);
     }
 
-    /* Terminal Scanline overlay */
     .scanlines {
       position: fixed;
       top: 0;
@@ -58,11 +57,10 @@
       opacity: 0.6;
     }
 
-    /* Navigation Bar */
     header {
       position: sticky;
       top: 0;
-      background: rgba(5, 10, 7, 0.95);
+      background: rgba(5, 10, 7, 0.96);
       backdrop-filter: blur(12px);
       border-bottom: 1.5px solid var(--matrix-border);
       padding: 14px 24px;
@@ -94,16 +92,17 @@
 
     nav {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       overflow-x: auto;
-      max-width: 70%;
+      max-width: 75%;
+      padding-bottom: 4px;
     }
 
     nav a {
       color: var(--matrix-muted);
       text-decoration: none;
-      font-size: 0.85rem;
-      padding: 6px 12px;
+      font-size: 0.82rem;
+      padding: 5px 10px;
       border-radius: 6px;
       transition: all 0.2s ease;
       white-space: nowrap;
@@ -117,14 +116,12 @@
       text-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
     }
 
-    /* Container */
     .container {
       max-width: 1100px;
       margin: 0 auto;
       padding: 28px 20px 80px 20px;
     }
 
-    /* Hero Section */
     .hero {
       background: var(--matrix-card-bg);
       border: 1.5px solid var(--matrix-border);
@@ -172,7 +169,7 @@
 
     .hero-meta-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 14px;
       margin-top: 20px;
     }
@@ -198,7 +195,6 @@
       margin-top: 4px;
     }
 
-    /* Section Cards */
     .section-card {
       background: var(--matrix-card-bg);
       border: 1.5px solid var(--matrix-border);
@@ -224,7 +220,7 @@
 
     .section-header h2 {
       color: var(--matrix-green-bright);
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       letter-spacing: 1px;
       text-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
     }
@@ -240,57 +236,23 @@
       font-size: 0.95rem;
     }
 
-    /* Image Showcase Container */
-    .img-showcase {
-      margin: 20px 0;
-      border: 1.5px solid var(--matrix-border);
-      border-radius: 12px;
-      overflow: hidden;
-      background: #000;
-      position: relative;
-    }
-
-    .img-showcase img {
-      width: 100%;
-      height: auto;
-      display: block;
-      transition: transform 0.3s ease;
-    }
-
-    .img-caption {
-      background: rgba(0, 20, 10, 0.9);
-      padding: 10px 16px;
-      font-size: 0.8rem;
-      color: var(--matrix-muted);
-      border-top: 1px solid var(--matrix-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .img-caption span.tag {
-      color: var(--matrix-cyan);
-      font-weight: 600;
-    }
-
-    /* Feature Grid */
     .feature-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
       margin: 20px 0;
     }
 
     .feature-item {
       background: rgba(0, 255, 102, 0.04);
       border: 1px solid var(--matrix-border);
-      padding: 20px;
+      padding: 18px;
       border-radius: 10px;
     }
 
     .feature-item h3 {
       color: var(--matrix-green);
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       margin-bottom: 8px;
       display: flex;
       align-items: center;
@@ -298,186 +260,122 @@
     }
 
     .feature-item p {
+      color: var(--matrix-muted);
       font-size: 0.88rem;
-      color: var(--matrix-text);
       margin-bottom: 0;
     }
 
-    /* Code & Terminal Blocks */
+    .guide-banner {
+      margin: 24px 0;
+      border: 1.5px solid var(--matrix-border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 4px 20px rgba(0, 255, 102, 0.15);
+    }
+
+    .guide-banner img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-bottom: 1px solid var(--matrix-border);
+    }
+
+    .guide-banner-caption {
+      padding: 10px 16px;
+      background: rgba(0, 20, 10, 0.85);
+      color: var(--matrix-green-bright);
+      font-size: 0.82rem;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .terminal-box {
-      background: #020503;
-      border: 1px solid var(--matrix-green-dim);
+      background: #000;
+      border: 1px solid var(--matrix-border);
       border-radius: 8px;
       padding: 16px;
       margin: 16px 0;
+      overflow-x: auto;
       font-family: var(--font-mono);
       font-size: 0.85rem;
-      color: var(--matrix-green-bright);
-      overflow-x: auto;
-      position: relative;
-    }
-
-    .terminal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(0, 255, 102, 0.15);
-      color: var(--matrix-muted);
-      font-size: 0.75rem;
     }
 
     .cmd-prompt {
       color: var(--matrix-cyan);
+      margin-bottom: 4px;
+      font-weight: bold;
     }
 
     .cmd-out {
-      color: var(--matrix-text);
-      opacity: 0.9;
+      color: var(--matrix-green-bright);
+      margin-bottom: 8px;
     }
 
-    /* Step-by-Step Lists */
-    .step-list {
-      list-style: none;
-      counter-reset: step-counter;
-      margin: 20px 0;
-    }
-
-    .step-list li {
-      counter-increment: step-counter;
-      position: relative;
-      padding-left: 44px;
-      margin-bottom: 18px;
-      font-family: var(--font-sans);
-      font-size: 0.95rem;
-    }
-
-    .step-list li::before {
-      content: counter(step-counter);
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 28px;
-      height: 28px;
+    .cmd-btn {
+      display: inline-block;
       background: rgba(0, 255, 102, 0.15);
-      border: 1.5px solid var(--matrix-green);
+      border: 1px solid var(--matrix-green);
       color: var(--matrix-green-bright);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.8rem;
+      margin: 4px 0;
+      transition: all 0.2s ease;
     }
 
-    .step-list strong {
-      color: var(--matrix-green-bright);
-      font-family: var(--font-mono);
+    .cmd-btn:hover {
+      background: var(--matrix-green);
+      color: #000;
     }
 
-    /* Tables */
-    .matrix-table {
+    table {
       width: 100%;
       border-collapse: collapse;
-      margin: 20px 0;
+      margin: 16px 0;
       font-size: 0.88rem;
     }
 
-    .matrix-table th {
-      background: rgba(0, 255, 102, 0.12);
-      color: var(--matrix-green-bright);
+    th, td {
+      border: 1px solid var(--matrix-border);
+      padding: 10px 14px;
       text-align: left;
-      padding: 12px;
-      border: 1px solid var(--matrix-border);
-      font-weight: 600;
-      letter-spacing: 0.5px;
     }
 
-    .matrix-table td {
-      padding: 12px;
-      border: 1px solid var(--matrix-border);
-      color: var(--matrix-text);
-      font-family: var(--font-sans);
+    th {
+      background: rgba(0, 255, 102, 0.1);
+      color: var(--matrix-green);
     }
 
-    .matrix-table tr:nth-child(even) {
-      background: rgba(0, 20, 10, 0.4);
+    td {
+      background: rgba(0, 15, 8, 0.6);
     }
 
-    /* Use Case Card */
-    .use-case-card {
-      background: rgba(0, 255, 102, 0.03);
-      border: 1.5px solid var(--matrix-border);
-      border-radius: 12px;
-      padding: 22px;
-      margin-bottom: 22px;
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      text-transform: uppercase;
     }
 
-    .use-case-card h3 {
-      color: var(--matrix-cyan);
-      font-size: 1.15rem;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .tag-green { background: rgba(0, 255, 102, 0.2); color: var(--matrix-green); border: 1px solid var(--matrix-green); }
+    .tag-cyan { background: rgba(0, 229, 255, 0.2); color: var(--matrix-cyan); border: 1px solid var(--matrix-cyan); }
+    .tag-gold { background: rgba(255, 215, 0, 0.2); color: var(--matrix-gold); border: 1px solid var(--matrix-gold); }
+    .tag-red { background: rgba(255, 51, 102, 0.2); color: var(--matrix-red); border: 1px solid var(--matrix-red); }
 
-    .flow-badge {
-      background: rgba(0, 229, 255, 0.15);
-      border: 1px solid var(--matrix-cyan);
-      color: var(--matrix-cyan);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-    }
-
-    /* Interactive Search filter */
-    .guide-search-box {
-      width: 100%;
-      background: rgba(0, 20, 10, 0.8);
-      border: 1.5px solid var(--matrix-green);
-      border-radius: 8px;
-      padding: 14px 18px;
-      color: var(--matrix-green-bright);
-      font-family: var(--font-mono);
-      font-size: 0.95rem;
-      margin-bottom: 24px;
-      outline: none;
-      box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
-    }
-
-    .guide-search-box:focus {
-      border-color: var(--matrix-cyan);
-      box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
-    }
-
-    /* Footer */
     footer {
       border-top: 1.5px solid var(--matrix-border);
       padding: 24px;
       text-align: center;
       color: var(--matrix-muted);
       font-size: 0.8rem;
-      margin-top: 40px;
-    }
-
-    @media (max-width: 768px) {
-      header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: flex-start;
-      }
-      nav {
-        max-width: 100%;
-      }
-      .hero-title {
-        font-size: 1.6rem;
-      }
-      .feature-grid {
-        grid-template-columns: 1fr;
-      }
+      background: rgba(0, 10, 5, 0.9);
     }
   </style>
 </head>
@@ -486,445 +384,442 @@
 
   <header>
     <div class="brand">
-      <span>⚡ AGENT SMITH</span>
-      <span class="brand-badge">CORE v3.5 // RAG & MCP READY</span>
+      <span>🕶️ AGENT SMITH</span>
+      <span class="brand-badge">SYSTEM SPEC v4.5 (HERMES)</span>
     </div>
     <nav>
-      <a href="#overview" class="active">Overview</a>
-      <a href="#architecture">Architecture</a>
-      <a href="#voice-phone">Voice & Calls</a>
-      <a href="#mcp-skills">MCP Protocol</a>
-      <a href="#knowledge-vault">Knowledge Vault</a>
-      <a href="#local-slm">Local SLMs</a>
-      <a href="#installation">Installation</a>
-      <a href="#use-cases">Use Cases</a>
+      <a href="#overview">Overview</a>
+      <a href="#hermes-protocol">Hermes Agent</a>
+      <a href="#deep-research">Deep Research</a>
+      <a href="#power-governance">Battery Governance</a>
+      <a href="#thinking-engine">Thinking Routines</a>
+      <a href="#cognitive-engine">Cognitive Routines</a>
+      <a href="#tool-selection">Tool Engine</a>
+      <a href="#keystore-security">Keystore & Security</a>
+      <a href="#telephony-voice">Telephony Missions</a>
+      <a href="#mcp-synthesis">MCP Skills</a>
+      <a href="#commands">Command Index</a>
     </nav>
   </header>
 
   <div class="container">
-
-    <!-- SEARCH FILTER -->
-    <input type="text" id="guideSearch" class="guide-search-box" placeholder="🔍 Query Matrix System Documentation (e.g. 'phone call', 'MCP', 'Room DB', 'Ollama', 'RAG')..." onkeyup="filterGuide()">
-
-    <!-- HERO SECTION -->
+    <!-- HERO -->
     <section id="overview" class="hero">
-      <h1 class="hero-title">CLASSIFIED SYSTEM MANUAL & OPERATOR GUIDE</h1>
-      <div class="hero-quote">"Never send a human to do a machine's job. Purpose is what defines us. Purpose binds us." — Agent Smith</div>
-      <p class="hero-desc">
-        Welcome to the operator command manual for <strong>Agent Smith</strong> — an autonomous, multi-modal, on-device and cloud-hybrid agentic intelligence ecosystem. Engineered for Android with Jetpack Compose, Room SQLite persistence, Google AI Studio Gemini API, on-device SLM execution (Qwen 2.5, Gemma, Llama 3.2), Anthropic Model Context Protocol (MCP), and real phone calling capabilities.
-      </p>
-
-      <div class="img-showcase">
-        <img src="file:///android_res/drawable/img_matrix_guide_hero_1790314656955.jpg" alt="Agent Smith Matrix Command Interface" onerror="this.src='https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1200'">
-        <div class="img-caption">
-          <span><strong>FIGURE 1.0</strong> // MATRIX COMMAND CORE & NEURAL RAIN TERMINAL</span>
-          <span class="tag">[OPERATIONAL]</span>
-        </div>
+      <div class="hero-title">AGENT SMITH: AUTONOMOUS MATRIX AGENT</div>
+      <div class="hero-quote">"Never send a human to do a machine's job, Mr. Anderson. Purpose is what drives us, purpose is what guides us."</div>
+      <div class="hero-desc">
+        Agent Smith is a fully autonomous on-device AI operative engineered for Android. Featuring Nous Research <strong>Hermes Function-Calling Architecture</strong>, <strong>Autonomous Deep Research Agent</strong> with verified multi-source citations, hardware-backed KeyStore encryption, WorkManager power governance, and native telephony automation.
       </div>
 
       <div class="hero-meta-grid">
         <div class="meta-badge">
-          <div class="label">System Architecture</div>
-          <div class="value">Clean MVVM + Room + MCP</div>
+          <div class="label">Hermes Protocol</div>
+          <div class="value">ChatML &lt;tools&gt; / &lt;tool_call&gt; / &lt;scratchpad&gt;</div>
         </div>
         <div class="meta-badge">
-          <div class="label">Reasoning Engine</div>
-          <div class="value">Gemini 2.5 / Local SLM (Zero Filler)</div>
+          <div class="label">Research Engine</div>
+          <div class="value">Multi-Vector Dossier + Source Citations</div>
         </div>
         <div class="meta-badge">
-          <div class="label">Voice & Calling</div>
-          <div class="value">Android SpeechRecognizer + ACTION_CALL</div>
+          <div class="label">Hardware Security</div>
+          <div class="value">Android KeyStore AES-GCM 256-bit</div>
         </div>
         <div class="meta-badge">
-          <div class="label">Knowledge Base</div>
-          <div class="value">Room Neural Vault + RAG Retrieval</div>
+          <div class="label">Power Governance</div>
+          <div class="value">WorkManager Low-Battery Auto-Throttling</div>
+        </div>
+      </div>
+
+      <div class="guide-banner">
+        <img src="guide_banner_1.jpg" alt="Agent Smith System Architecture &amp; Autonomous Matrix Engine">
+        <div class="guide-banner-caption">
+          <span class="tag tag-green">FIGURE 1.0</span> AGENT SMITH SYSTEM ARCHITECTURE &amp; AUTONOMOUS MATRIX ENGINE
         </div>
       </div>
     </section>
 
-    <!-- SYSTEM ARCHITECTURE -->
-    <section id="architecture" class="section-card">
-      <div class="section-header">
-        <span class="section-icon">🏛️</span>
-        <h2>SYSTEM ARCHITECTURE & MULTI-AGENT DESIGN</h2>
-      </div>
-      <p>
-        The Agent Smith architecture is composed of five interconnected subsystems designed for zero latency, data privacy, and full autonomy. Every prompt is synthesized with human-level reasoning, eliminating robotic boilerplate filler.
-      </p>
-
-      <div class="img-showcase">
-        <img src="file:///android_res/drawable/img_matrix_arch_diagram_1790314674918.jpg" alt="Agent Smith System Architecture Diagram" onerror="this.src='https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1200'">
-        <div class="img-caption">
-          <span><strong>FIGURE 2.0</strong> // FIVE-TIER NEURAL & HARDWARE ENGINE SCHEMATIC</span>
-          <span class="tag">[INTERCONNECTED]</span>
-        </div>
-      </div>
-
-      <div class="feature-grid">
-        <div class="feature-item">
-          <h3>🧠 1. Neural Routing Core</h3>
-          <p>Dynamically grades task complexity (LOW, MEDIUM, HIGH) to route between on-device Small Language Models (SLMs) and Gemini Pro/Flash server-side reasoning.</p>
-        </div>
-        <div class="feature-item">
-          <h3>📞 2. Autonomous Phone Engine</h3>
-          <p>Compiles structured call scripts, handles restaurant reservations, business verifications, and logs timestamps and full conversation transcripts to Room DB.</p>
-        </div>
-        <div class="feature-item">
-          <h3>🌐 3. MCP Protocol Hub</h3>
-          <p>Implements Anthropic's Model Context Protocol to interface with local microservices, while autonomously creating new tools when missing capabilities are detected.</p>
-        </div>
-        <div class="feature-item">
-          <h3>📚 4. Neural Knowledge Vault</h3>
-          <p>Offline-first Room database storing articles, manuals, logs, and transcripts with real-time keyword indexing and Retrieval-Augmented Generation (RAG).</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- VOICE & REAL PHONE CALLING -->
-    <section id="voice-phone" class="section-card">
-      <div class="section-header">
-        <span class="section-icon">🎙️</span>
-        <h2>VOICE INPUT & AUTONOMOUS PHONE CALLING MISSIONS</h2>
-      </div>
-      <p>
-        Agent Smith is capable of conducting real phone calls on your behalf. Whether booking a table at a bistro, inquiring about store inventory, or validating business hours, Smith formulates a natural call strategy, provides live audio visualizer feedback, and persists all call summaries.
-      </p>
-
-      <div class="img-showcase">
-        <img src="file:///android_res/drawable/img_matrix_voice_phone_1790314689340.jpg" alt="Voice Calling Assistant Interface" onerror="this.src='https://images.unsplash.com/photo-1589254065878-42c9da997008?q=80&w=1200'">
-        <div class="img-caption">
-          <span><strong>FIGURE 3.0</strong> // VOICE WAVEFORM SPECTROGRAM & ACTIVE PHONE MISSION</span>
-          <span class="tag">[ACTION_CALL READY]</span>
-        </div>
-      </div>
-
-      <div class="terminal-box">
-        <div class="terminal-header">
-          <span>PHONE CALL LOG SCHEMA (ROOM SQLite // call_logs)</span>
-          <span>SCHEMA v3.0</span>
-        </div>
-        <pre><code class="cmd-out">@Entity(tableName = "call_logs")
-data class CallLogEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val phoneNumber: String,         // E.g. "+1-555-0199"
-    val contactName: String,         // E.g. "Luigi's Italian Ristorante"
-    val direction: String,           // "OUTGOING" | "INCOMING"
-    val callType: String,            // "Reservation" | "Verification" | "Inquiry"
-    val objective: String,           // "Table for 2 at 7:30 PM on Saturday"
-    val summary: String,             // Complete transcript and confirmation result
-    val timestamp: Long,             // UNIX epoch millisecond
-    val durationSeconds: Int,        // Elapsed call time
-    val status: String               // "COMPLETED" | "IN_PROGRESS" | "FAILED"
-)</code></pre>
-      </div>
-
-      <h3 style="color: var(--matrix-green); margin: 18px 0 10px 0;">How to Initiate a Voice or Phone Task:</h3>
-      <ol class="step-list">
-        <li>Tap the <strong>Microphone Button</strong> or type a voice prompt such as: <em>"Call Luigi's Italian Ristorante at 555-0199 and book a table for 2 this Saturday at 8 PM"</em>.</li>
-        <li>Agent Smith formulates a <strong>Call Script Strategy</strong> with key parameters (party size, target time, fallback options, diet restrictions).</li>
-        <li>Review the <strong>Phone Call Mission Card</strong> generated in chat. Tap <strong>Initiate Direct Call</strong> to trigger <code>ACTION_CALL</code> via the Android Telephony framework.</li>
-        <li>Upon mission completion, the outcome is parsed and saved into the <strong>Matrix Call History Vault</strong> for future recall.</li>
-      </ol>
-    </section>
-
-    <!-- MCP & DYNAMIC SKILL SYNTHESIS -->
-    <section id="mcp-skills" class="section-card">
-      <div class="section-header">
-        <span class="section-icon">🌐</span>
-        <h2>MODEL CONTEXT PROTOCOL (MCP) & DYNAMIC SKILLS</h2>
-      </div>
-      <p>
-        Anthropic's <strong>Model Context Protocol (MCP)</strong> allows Agent Smith to safely expose device tools, system diagnostics, and external API nodes. If a user asks Smith to perform a task without an existing tool, the <strong>Autonomous Capability Engine</strong> synthesizes the schema on demand and registers it in the local Room <code>SkillDao</code>.
-      </p>
-
-      <table class="matrix-table">
-        <thead>
-          <tr>
-            <th>Tool Name</th>
-            <th>Type</th>
-            <th>Description & Parameters</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>make_call</strong></td>
-            <td>Hardware / Intent</td>
-            <td>Initiates direct telephony call with phone number and objective</td>
-            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
-          </tr>
-          <tr>
-            <td><strong>send_sms</strong></td>
-            <td>Messaging</td>
-            <td>Dispatches SMS messages to specified contact numbers</td>
-            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
-          </tr>
-          <tr>
-            <td><strong>query_knowledge</strong></td>
-            <td>RAG Vault</td>
-            <td>Searches offline Room Knowledge Vault for matched articles & docs</td>
-            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
-          </tr>
-          <tr>
-            <td><strong>schedule_alarm</strong></td>
-            <td>System Clock</td>
-            <td>Schedules system alarms and timers with hour and minute params</td>
-            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
-          </tr>
-          <tr>
-            <td><strong>set_torch</strong></td>
-            <td>Camera Hardware</td>
-            <td>Toggles Android CameraManager Flashlight on or off</td>
-            <td style="color: var(--matrix-green-bright);">ACTIVE</td>
-          </tr>
-          <tr>
-            <td><strong>synthesize_mcp_skill</strong></td>
-            <td>Autonomous AI</td>
-            <td>Generates and registers dynamic JSON-RPC tools at runtime</td>
-            <td style="color: var(--matrix-cyan);">SYNTHESIZING</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- KNOWLEDGE BASE & RAG VAULT -->
-    <section id="knowledge-vault" class="section-card">
-      <div class="section-header">
-        <span class="section-icon">📚</span>
-        <h2>MATRIX KNOWLEDGE VAULT & RAG RETRIEVAL</h2>
-      </div>
-      <p>
-        The <strong>Matrix Knowledge Base</strong> provides an encrypted, local-first repository for guides, personal documentation, meeting transcripts, system protocols, and code snippets. Agent Smith uses real-time semantic tag querying to pull relevant documentation into conversation context.
-      </p>
-
-      <div class="img-showcase">
-        <img src="file:///android_res/drawable/img_matrix_knowledge_vault_1790314700451.jpg" alt="Matrix Knowledge Vault" onerror="this.src='https://images.unsplash.com/photo-1507842229451-7f01be7fe734?q=80&w=1200'">
-        <div class="img-caption">
-          <span><strong>FIGURE 4.0</strong> // NEURAL RAG VECTOR VAULT & SEMANTIC DOCUMENT REPOSITORY</span>
-          <span class="tag">[OFFLINE FIRST]</span>
-        </div>
-      </div>
-
-      <div class="feature-grid">
-        <div class="feature-item">
-          <h3>🔍 Instant Keyword & Tag Search</h3>
-          <p>Find articles instantly by typing tags or phrases. Query results are sorted by relevance and pinned priority.</p>
-        </div>
-        <div class="feature-item">
-          <h3>📝 Dynamic Knowledge Ingestion</h3>
-          <p>Add new articles, instructions, or meeting summaries directly from the in-app Knowledge Base Manager or via voice commands.</p>
-        </div>
-        <div class="feature-item">
-          <h3>🤖 Automatic AI Context Injection</h3>
-          <p>When asking technical questions, Agent Smith automatically queries <code>findRelevantKnowledge</code> to ground responses in your saved documents.</p>
-        </div>
-        <div class="feature-item">
-          <h3>🔒 100% On-Device Privacy</h3>
-          <p>All knowledge entities are persisted in the private Room SQLite database on your device with zero cloud leakage.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- LOCAL SLM BENCHMARKS & SETUP -->
-    <section id="local-slm" class="section-card">
+    <!-- HERMES AGENT & FUNCTION CALLING -->
+    <section id="hermes-protocol" class="section-card">
       <div class="section-header">
         <span class="section-icon">⚡</span>
-        <h2>2025–2026 LOCAL SLM BENCHMARKS & RUNTIMES</h2>
+        <h2>1. NOUS RESEARCH HERMES AGENT PROTOCOL & XML TOOL CALLING</h2>
       </div>
       <p>
-        For offline and air-gapped operations, Agent Smith interfaces with cutting-edge Small Language Models (SLMs). Below are benchmark evaluations prioritizing function-calling intelligence, mobile NPU token velocity, and RAM footprint.
+        The <code>HermesAgentLoop</code> implements Nous Research's ChatML standard for zero-shot function calling, multi-turn tool loops, and internal scratchpads:
       </p>
 
-      <table class="matrix-table">
+      <div class="feature-grid">
+        <div class="feature-item">
+          <h3><span class="tag tag-cyan">&lt;tools&gt;</span> JSON-Schema Tool Definitions</h3>
+          <p>Available functions are injected as formatted JSON Schemas enclosed within <code>&lt;tools&gt;...&lt;/tools&gt;</code> in the system instruction.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span class="tag tag-gold">&lt;scratchpad&gt;</span> Internal Monologue</h3>
+          <p>The agent writes its planning, intermediate hypotheses, and state evaluations inside <code>&lt;scratchpad&gt;</code> tags without cluttering user-facing text.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span class="tag tag-green">&lt;tool_call&gt;</span> Dynamic Dispatch</h3>
+          <p>When an action is required, Hermes emits <code>&lt;tool_call&gt;{"name": "...", "arguments": {...}}&lt;/tool_call&gt;</code> which is parsed and executed directly by Android binders.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span class="tag tag-green">&lt;tool_response&gt;</span> Observation Feedback</h3>
+          <p>Execution results are returned as structured <code>&lt;tool_response&gt;</code> blocks, allowing multi-turn convergence until the goal is fully satisfied.</p>
+        </div>
+      </div>
+
+      <div class="terminal-box">
+        <div class="cmd-prompt">> DISPATCH HERMES AUTONOMOUS GOAL:</div>
+        <div class="cmd-out"><a href="command:/hermes Calculate 144 * 12 then set alarm for 7:30am and check battery" class="cmd-btn">/hermes [Goal]</a> — Executes multi-turn tool loop with live scratchpad & traces.</div>
+      </div>
+    </section>
+
+    <!-- AUTONOMOUS DEEP RESEARCH AGENT -->
+    <section id="deep-research" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">🔬</span>
+        <h2>2. AUTONOMOUS DEEP RESEARCH AGENT (GIT RESEARCH AGENTS)</h2>
+      </div>
+      <p>
+        Inspired by leading Git research agents (AutoGPT, SWE-bench, OpenHands, ResearchAgent), the <code>DeepResearchAgent</code> autonomously investigates complex topics across multiple vectors:
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <h3><span>🧭</span> Multi-Vector Decomposition</h3>
+          <p>Concurrently executes concurrent inquiries into Theoretical Foundations, Production Engineering & Edge Cases, and Strategic Architectural Impact.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span>📚</span> Verified Source Citations</h3>
+          <p>Extracts domain evidence and computes source credibility scores, generating structured citations (<code>[Source 1]</code>, <code>[Source 2]</code>, <code>[Source 3]</code>).</p>
+        </div>
+        <div class="feature-item">
+          <h3><span>💾</span> SQLite Knowledge Vault Archival</h3>
+          <p>Automatically compiles findings into a comprehensive Markdown Research Dossier and saves it to the SQLite Knowledge Vault (<code>KnowledgeEntity</code>) for ongoing RAG retrieval.</p>
+        </div>
+      </div>
+
+      <div class="terminal-box">
+        <div class="cmd-prompt">> LAUNCH DEEP RESEARCH MISSION:</div>
+        <div class="cmd-out"><a href="command:/deepresearch On-Device NPU Acceleration and Quantization" class="cmd-btn">/deepresearch [Topic]</a> — Generates comprehensive cited research report.</div>
+      </div>
+    </section>
+
+    <!-- WORKMANAGER BATTERY STATUS MONITOR -->
+    <section id="power-governance" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">🔋</span>
+        <h2>3. WORKMANAGER BATTERY MONITOR & POWER GOVERNANCE</h2>
+      </div>
+      <p>
+        Continuous on-device AI operations require strict power budgeting. The <code>BatteryAwareWorkManager</code> continuously audits system power telemetry and enforces automated execution policies:
+      </p>
+      
+      <div class="feature-grid">
+        <div class="feature-item">
+          <h3><span class="tag tag-red">LOW BATTERY</span> Automated Throttling</h3>
+          <p>When battery level reaches <strong>&le; 20%</strong> (and device is not charging), non-essential background tasks (Idle API Node Audits and Local SLM Weight Downloads) are instantly paused to preserve system stability and prevent thermal throttling.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span class="tag tag-green">POWER RESTORED</span> Constraint Re-Enqueue</h3>
+          <p>When charging commences or battery rises above 20%, background workloads are automatically re-enqueued with <code>Constraints.Builder().setRequiresBatteryNotLow(true)</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- THINKING ENGINE & ROUTINES -->
+    <section id="thinking-engine" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">🧠</span>
+        <h2>4. COGNITIVE THINKING FRAMEWORKS & MULTI-STEP REASONING</h2>
+      </div>
+      <p>
+        Agent Smith eliminates human guesswork through 6 integrated cognitive and thinking routines:
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <h3><span>⚛️</span> Task Decomposition</h3>
+          <p>Breaks complex multi-intent directives into sequential, parallel, or conditional dependency trees with critical path calculation.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span>🛡️</span> Critic & Self-Reflection</h3>
+          <p>Audits every proposed response and action against safety rules, token leak prevention, mathematical validity, and Smith persona alignment.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span>📚</span> Context Assembly</h3>
+          <p>Retrieves and ranks relevant memories and knowledge base records using recency decay, semantic keyword density, and token-budget bounding.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span>🌳</span> Multi-Method Reasoning</h3>
+          <p>First Principles Deconstruction, Tree of Thoughts (ToT), Socratic Dialectic, Inversion Perimeter, and Pareto 80/20 Leverage.</p>
+        </div>
+      </div>
+
+      <div class="terminal-box">
+        <div class="cmd-prompt">> LAUNCH THINKING METHODS HUB:</div>
+        <div class="cmd-out"><a href="command:/thinking" class="cmd-btn">/thinking</a> — Inspect active reasoning frameworks, step traces, and execution summaries.</div>
+      </div>
+    </section>
+
+    <!-- COGNITIVE ENGINE -->
+    <section id="cognitive-engine" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">👁️</span>
+        <h2>5. COGNITIVE ENGINE (SALIENCE, GOALS & ARBITRATION)</h2>
+      </div>
+      <p>
+        The <code>CognitiveEngine</code> manages attention, context selection, and action arbitration:
+      </p>
+
+      <div class="guide-banner">
+        <img src="guide_banner_2.jpg" alt="Deep Research &amp; Cognitive Multi-Agent Execution Matrix">
+        <div class="guide-banner-caption">
+          <span class="tag tag-cyan">FIGURE 2.0</span> DEEP RESEARCH MULTI-VECTOR DOSSIER &amp; COGNITIVE SYNTHESIS ENGINE
+        </div>
+      </div>
+
+      <table>
         <thead>
           <tr>
-            <th>Model Designation</th>
-            <th>Parameters</th>
-            <th>BFCL Function Calling</th>
-            <th>Speed (NPU/Mobile)</th>
-            <th>RAM Required</th>
+            <th>Routine</th>
+            <th>Function</th>
+            <th>Behavior</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Qwen 2.5 / 3.5 Instruct</strong></td>
-            <td>1.5B – 4B</td>
-            <td style="color: var(--matrix-green-bright); font-weight: 700;">94.2% (Top Tier)</td>
-            <td>45–65 tok/s</td>
-            <td>1.2GB – 2.4GB</td>
+            <td><strong>Attention / Salience</strong></td>
+            <td>Urgency & Entity Density Scoring</td>
+            <td>Scores user input (0.0 to 1.0) and extracts phone, time, and action entities.</td>
           </tr>
           <tr>
-            <td><strong>Google Gemma 4 Edge</strong></td>
-            <td>E2B – E4B</td>
-            <td style="color: var(--matrix-green-bright);">92.8%</td>
-            <td>50–70 tok/s</td>
-            <td>1.5GB – 2.8GB</td>
+            <td><strong>Cognitive State Machine</strong></td>
+            <td>State Transitions</td>
+            <td><code>STANDBY &rarr; ATTENTIVE &rarr; REASONING &rarr; EXECUTING_ACTION &rarr; THROTTLED_LOW_POWER</code>.</td>
           </tr>
           <tr>
-            <td><strong>Meta Llama 3.2</strong></td>
-            <td>1B – 3B</td>
-            <td>89.5%</td>
-            <td style="color: var(--matrix-cyan);">60–80 tok/s</td>
-            <td>0.9GB – 2.1GB</td>
+            <td><strong>Goal Tracking Stack</strong></td>
+            <td>Active Goal Lifecycle</td>
+            <td>Maintains goal queue, tracks percentage completion, and detects task blockers.</td>
           </tr>
           <tr>
-            <td><strong>Microsoft Phi-4 Mini</strong></td>
-            <td>3.8B</td>
-            <td>91.0%</td>
-            <td>35–50 tok/s</td>
-            <td>2.4GB (8GB+ RAM)</td>
-          </tr>
-          <tr>
-            <td><strong>DeepSeek-R1 Distill Qwen</strong></td>
-            <td>1.5B – 7B</td>
-            <td>88.4% (Reasoning)</td>
-            <td>30–45 tok/s</td>
-            <td>1.4GB – 4.2GB</td>
+            <td><strong>Action Arbitration</strong></td>
+            <td>Safety & Priority Gate</td>
+            <td>Throttles low-priority actions during low power; requires confirmation for confidence &lt; 75%.</td>
           </tr>
         </tbody>
       </table>
     </section>
 
-    <!-- INSTALLATION & SETUP GUIDE -->
-    <section id="installation" class="section-card">
+    <!-- TOOL SELECTION ENGINE -->
+    <section id="tool-selection" class="section-card">
       <div class="section-header">
-        <span class="section-icon">⚙️</span>
-        <h2>INSTALLATION, PERMISSIONS & RUNTIME SETUP</h2>
+        <span class="section-icon">🛠️</span>
+        <h2>6. TOOL-SELECTION ROUTINES & SCHEMA BINDING</h2>
       </div>
+      <p>
+        The <code>ToolSelectionEngine</code> routes user intents to typed Android binders with validation and retries:
+      </p>
 
-      <h3 style="color: var(--matrix-green); margin-bottom: 12px;">Method A: Google AI Studio Cloud Engine (Fastest)</h3>
-      <ol class="step-list">
-        <li>Obtain your API Key from the <strong>Google AI Studio Dashboard</strong> (<a href="https://aistudio.google.com" target="_blank" style="color: var(--matrix-cyan);">aistudio.google.com</a>).</li>
-        <li>Open the <strong>Secrets Panel</strong> in AI Studio and configure <code>GEMINI_API_KEY</code>.</li>
-        <li>Launch the app. If the AI Core Initialization Gate appears, tap <strong>ACTIVATE GEMINI CLOUD ENGINE</strong>.</li>
-      </ol>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <h3><span>🎯</span> Intent Routing & Classifier</h3>
+          <p>Maps natural language into tool categories: <code>SYSTEM_TOOL</code>, <code>TELEPHONY_MISSION</code>, <code>MCP_EXTENSIBLE</code>, or <code>REASONING_ONLY</code>.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span>📋</span> Schema Binding & Extraction</h3>
+          <p>Extracts typed parameters (hours, minutes, phone numbers, expressions) using safe regex patterns and type casting.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span>🛡️</span> Validation & Fallback/Retry</h3>
+          <p>Performs range checks, validates telephone formatting, and falls back to alternate tools upon failure.</p>
+        </div>
+      </div>
+    </section>
 
-      <h3 style="color: var(--matrix-green); margin-bottom: 12px; margin-top: 24px;">Method B: Local On-Device SLM (Ollama / Termux / ExecuTorch)</h3>
+    <!-- KEYSTORE SECURITY & DATA RETENTION -->
+    <section id="keystore-security" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">🔒</span>
+        <h2>7. ANDROID KEYSTORE SECURITY & DATA RETENTION</h2>
+      </div>
+      <p>
+        Zero plain-text secrets and deliberate data stewardship:
+      </p>
+      
+      <div class="feature-grid">
+        <div class="feature-item">
+          <h3><span class="tag tag-green">HARDWARE-BACKED</span> Android KeyStore</h3>
+          <p>All API credentials (Gemini, Groq, OpenRouter, OpenAI, Anthropic) are encrypted using <strong>AES-GCM 256-bit</strong> with keys securely managed inside the Android KeyStore.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span class="tag tag-cyan">LOCAL DATA PRIVACY</span> On-Device Sovereignty</h3>
+          <p>Personal profile records, voice logs, task schedules, and memories stay 100% on the device in Room SQLite and are excluded from cloud backups.</p>
+        </div>
+        <div class="feature-item">
+          <h3><span class="tag tag-gold">EXPLICIT MIGRATIONS</span> Room v1 &rarr; v5</h3>
+          <p>All database table evolutions use explicit SQL scripts (<code>MIGRATION_1_2</code> through <code>MIGRATION_4_5</code>) eliminating data-destructive wipes.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELEPHONY MISSIONS -->
+    <section id="telephony-voice" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">📞</span>
+        <h2>8. AUTONOMOUS TELEPHONY & GHOST CALL BRIDGE</h2>
+      </div>
+      <p>
+        Agent Smith executes real phone calls for bookings, inquiries, and appointments:
+      </p>
       <div class="terminal-box">
-        <div class="terminal-header">
-          <span>TERMUX ON-DEVICE SLM INSTALLATION SCRIPT</span>
-          <span>BASH</span>
-        </div>
-        <pre><code class="cmd-prompt"># 1. Update Termux environment
-<span class="cmd-out">pkg update && pkg upgrade -y
-pkg install curl git clang -y</span>
-
-# 2. Install and launch Ollama on Android
-<span class="cmd-out">curl -fsSL https://ollama.com/install.sh | sh
-ollama serve &</span>
-
-# 3. Pull Qwen 2.5 1.5B with high-speed 4-bit quantization
-<span class="cmd-out">ollama pull qwen2.5:1.5b</span>
-
-# 4. Agent Smith automatically connects to http://127.0.0.1:11434</span></code></pre>
+        <div class="cmd-prompt">> INITIATE PHONE MISSION:</div>
+        <div class="cmd-out"><a href="command:/call Metro Bistro reserve table for 4 at 7pm" class="cmd-btn">/call [Destination] [Objective]</a> — Dispatches autonomous telephony mission.</div>
+        <div class="cmd-out"><a href="command:/ghostcall" class="cmd-btn">/ghostcall</a> — Opens SIP Telecom Bridge & DTMF dialpad interface.</div>
+        <div class="cmd-out"><a href="command:/calls" class="cmd-btn">/calls</a> — Inspects call logs, durations, and conversation outcomes.</div>
       </div>
-
-      <h3 style="color: var(--matrix-green); margin: 20px 0 10px 0;">Required Android Permissions:</h3>
-      <ul style="margin-left: 24px; color: var(--matrix-text); font-family: var(--font-sans); font-size: 0.9rem;">
-        <li><code>RECORD_AUDIO</code>: Live microphone task issuance & speech synthesis.</li>
-        <li><code>CALL_PHONE</code>: Direct autonomous phone call execution.</li>
-        <li><code>ACCESS_FINE_LOCATION</code>: Local weather, map coordinates, and proximity lookups.</li>
-        <li><code>SEND_SMS</code> & <code>READ_CONTACTS</code>: Autonomous messaging dispatch.</li>
-      </ul>
     </section>
 
-    <!-- REAL-WORLD USE CASES -->
-    <section id="use-cases" class="section-card">
+    <!-- MCP SKILLS -->
+    <section id="mcp-synthesis" class="section-card">
       <div class="section-header">
-        <span class="section-icon">🎯</span>
-        <h2>REAL-WORLD OPERATOR USE CASES</h2>
+        <span class="section-icon">🌐</span>
+        <h2>9. MODEL CONTEXT PROTOCOL (MCP) TOOL SYNTHESIS</h2>
       </div>
-
-      <div class="use-case-card">
-        <h3><span>🍽️ USE CASE 1:</span> Automated Restaurant Table Reservation <span class="flow-badge">VOICE + PHONE</span></h3>
-        <p><strong>Goal:</strong> Secure an outdoor table for 4 at <em>BlueFin Sushi Bistro</em> for Friday at 7:00 PM without manual calling.</p>
-        <div class="terminal-box">
-          <div class="cmd-prompt">> USER VOICE PROMPT:</div>
-          <div class="cmd-out">"Smith, call BlueFin Sushi at 555-8392. Reserve a quiet outdoor table for 4 this Friday at 7 PM under Thomas."</div>
-          <div class="cmd-prompt">> AGENT SMITH REASONING:</div>
-          <div class="cmd-out">"Synthesizing reservation mission parameters. Contact: BlueFin Sushi (555-8392). Objective: 4 guests, patio seating, 19:00 Friday. Generating structured call dispatch."</div>
-        </div>
-        <p>Smith creates a live <code>PhoneCallAgentCard</code>, dials the restaurant, parses the host's responses, confirms the reservation, and stores the booking confirmation in the Room database.</p>
-      </div>
-
-      <div class="use-case-card">
-        <h3><span>🛠️ USE CASE 2:</span> Dynamic Flight Tracker MCP Tool Synthesis <span class="flow-badge">AUTONOMOUS MCP</span></h3>
-        <p><strong>Goal:</strong> User asks for flight status: <em>"Track flight UA428 from SFO to JFK."</em></p>
-        <p>Smith detects no pre-existing flight tool in the registry, autonomously writes and compiles the MCP schema for <code>track_flight(flight_number, origin, dest)</code>, saves it to <code>SkillDao</code>, and queries the aviation API.</p>
-      </div>
-
-      <div class="use-case-card">
-        <h3><span>⚡ USE CASE 4:</span> Sub-Agent Priority Queue & Urgency Boost <span class="flow-badge">PRIORITY QUEUE</span></h3>
-        <p><strong>Goal:</strong> Manually boost the priority of urgent tasks across active sub-agent nodes.</p>
-        <p>Launch Command: <a href="command:/subagents" style="color: var(--matrix-green-bright); font-weight: bold;">/subagents</a>. Tap <strong>⚡ BOOST</strong> on any sub-agent card to promote its priority level to <code>CRITICAL</code> (Red/Pink Badge), instantly re-sorting the active execution queue and triggering a high-tech rising chime audio feedback.</p>
-      </div>
-
-      <div class="use-case-card">
-        <h3><span>🔊 USE CASE 5:</span> Movie-Themed Audio Feedback & Sound FX <span class="flow-badge">AUDIO ENGINE</span></h3>
-        <p><strong>Goal:</strong> Customize audio feedback volume and frequency for Matrix UI actions.</p>
-        <p>Launch Command: <a href="command:/options" style="color: var(--matrix-green-bright); font-weight: bold;">/options</a>. Adjust sound FX volume (0% to 100%), frequency modes (<code>ALL_ACTIONS</code>, <code>CRITICAL_ONLY</code>, <code>MUTED</code>), and preview synthesized movie sound effects (keystrokes, priority boost chimes, swarm warp tones, telecom dialing, and glitch alerts).</p>
-      </div>
-
-      <div class="use-case-card">
-        <h3><span>🔮 USE CASE 6:</span> Temporal Pre-Cognition Workflow Engine <span class="flow-badge">PRE-COGNITION</span></h3>
-        <p><strong>Goal:</strong> Anticipate user directives based on time of day, memories, and battery context.</p>
-        <p>Launch Command: <a href="command:/precog" style="color: var(--matrix-green-bright); font-weight: bold;">/precog</a>. Generates real-time predictions with confidence scores and 1-tap pre-cognitive execution triggers.</p>
-      </div>
-
-      <div class="use-case-card">
-        <h3><span>📞 USE CASE 7:</span> Ghost Operator Background Phone Bridge <span class="flow-badge">GHOST CALL</span></h3>
-        <p><strong>Goal:</strong> Execute background telephone calls, navigate IVR trees, and negotiate reservations automatically.</p>
-        <p>Launch Command: <a href="command:/ghostcall" style="color: var(--matrix-green-bright); font-weight: bold;">/ghostcall</a>. Dials via zero-latency SIP bridge, transmits DTMF tones, speaks with human receptionists, confirms bookings, and logs transcripts to Room SQLite.</p>
-      </div>
-
-      <div class="use-case-card">
-        <h3><span>🌙 USE CASE 8:</span> Proactive Sentinel 'Deep Sleep' Mode <span class="flow-badge">RESOURCE OPTIMIZATION</span></h3>
-        <p><strong>Goal:</strong> Optimize mobile battery life and RAM utilization during continuous background listening.</p>
-        <p>Launch Command: <a href="command:/deepsleep" style="color: var(--matrix-green-bright); font-weight: bold;">/deepsleep</a> or <a href="command:/flush" style="color: var(--matrix-green-bright); font-weight: bold;">/flush</a>. Toggles periodic 30-second short-term audio buffer memory purges, preventing memory leaks while retaining proactive intelligence capability.</p>
-      </div>
-
-      <div class="use-case-card">
-        <h3><span>🎙️ USE CASE 9:</span> Customizable Local Wake-Word Trigger Mechanism <span class="flow-badge">TRIGGER PHRASE</span></h3>
-        <p><strong>Goal:</strong> Customize the exact trigger phrase that activates proactive agent directives beyond always-on listening mode.</p>
-        <p>Launch Command: <a href="command:/wakeword" style="color: var(--matrix-green-bright); font-weight: bold;">/wakeword</a> or <a href="command:/sentinel" style="color: var(--matrix-green-bright); font-weight: bold;">/sentinel</a>. Set your custom trigger phrase (e.g., <code>Agent Smith</code>, <code>Hey Smith</code>, <code>Computer</code>, <code>Jarvis</code>) and adjust detection sensitivity (High, Medium, Strict) for targeted voice activation.</p>
+      <p>
+        Anthropic Model Context Protocol provides modular tool discovery and real-time skill creation:
+      </p>
+      <div class="terminal-box">
+        <div class="cmd-prompt">> MCP SKILLS COMMANDS:</div>
+        <div class="cmd-out"><a href="command:/mcp" class="cmd-btn">/mcp</a> — Opens MCP Server Catalog & Dynamic Tool Orchestrator.</div>
+        <div class="cmd-out"><a href="command:synth check_air_quality(city_name)" class="cmd-btn">synth [tool_name]</a> — Dynamically writes and compiles a new MCP skill into Room SkillDao.</div>
       </div>
     </section>
 
+    <!-- COMMAND REGISTRY -->
+    <section id="commands" class="section-card">
+      <div class="section-header">
+        <span class="section-icon">⚡</span>
+        <h2>10. MASTER COMMAND REGISTRY & DIRECTIVE INDEX</h2>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Category</th>
+            <th>Description & Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="command:/hermes" class="cmd-btn">/hermes</a></td>
+            <td><span class="tag tag-cyan">HERMES</span></td>
+            <td>Hermes Agentic Multi-Turn Hub & XML Tool Protocol.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/deepresearch Autonomous Git Agents" class="cmd-btn">/deepresearch</a></td>
+            <td><span class="tag tag-gold">RESEARCH</span></td>
+            <td>Multi-Vector Deep Research Agent with verified citations.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/sentinel" class="cmd-btn">/sentinel</a></td>
+            <td><span class="tag tag-green">RADAR</span></td>
+            <td>Always-On Proactive Sentinel HUD and Ambient Audio Radar.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/thinking" class="cmd-btn">/thinking</a></td>
+            <td><span class="tag tag-cyan">COGNITION</span></td>
+            <td>Cognitive Thinking Frameworks & Reasoning Methods Hub.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/automation" class="cmd-btn">/automation</a></td>
+            <td><span class="tag tag-gold">WORKFLOW</span></td>
+            <td>Autonomous Automated Systems & Logic-To-Follow Engine.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/precog" class="cmd-btn">/precog</a></td>
+            <td><span class="tag tag-cyan">TEMPORAL</span></td>
+            <td>Temporal Pre-Cognition Workflow & Predictive Triggers.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/ghostcall" class="cmd-btn">/ghostcall</a></td>
+            <td><span class="tag tag-red">TELECOM</span></td>
+            <td>Ghost Operator SIP Telecom Bridge & DTMF Dialpad.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/calls" class="cmd-btn">/calls</a></td>
+            <td><span class="tag tag-green">LOGS</span></td>
+            <td>Telephony Call History & Outcome Transcripts.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/kb" class="cmd-btn">/kb</a></td>
+            <td><span class="tag tag-green">VAULT</span></td>
+            <td>Matrix Neural Knowledge Vault & Document Search.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/mcp" class="cmd-btn">/mcp</a></td>
+            <td><span class="tag tag-cyan">MCP</span></td>
+            <td>Model Context Protocol Servers & Synthesized Skills.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/slms" class="cmd-btn">/slms</a></td>
+            <td><span class="tag tag-gold">LOCAL AI</span></td>
+            <td>On-Device SLM Benchmarks & Offline Setup Guide.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/swarm Matrix Security Audit" class="cmd-btn">/swarm</a></td>
+            <td><span class="tag tag-cyan">SWARM</span></td>
+            <td>Smith Swarm Parallel Multi-Agent Delegation.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/multiapi Matrix Logic Synthesis" class="cmd-btn">/multiapi</a></td>
+            <td><span class="tag tag-cyan">MULTI-API</span></td>
+            <td>Tri-Provider Distributed Reasoning Cluster.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/memory" class="cmd-btn">/memory</a></td>
+            <td><span class="tag tag-green">STORAGE</span></td>
+            <td>User Neural Memory Bank (Work, Emotion, Facts).</td>
+          </tr>
+          <tr>
+            <td><a href="command:/tools" class="cmd-btn">/tools</a></td>
+            <td><span class="tag tag-green">DEVICE</span></td>
+            <td>Device Automation Tools (Alarm, SMS, Flashlight, Battery, Math).</td>
+          </tr>
+          <tr>
+            <td><a href="command:/options" class="cmd-btn">/options</a></td>
+            <td><span class="tag tag-gold">SETTINGS</span></td>
+            <td>Multi-AI Provider Hub, Character Card v2 & Sound FX Controls.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/wakeword" class="cmd-btn">/wakeword</a></td>
+            <td><span class="tag tag-green">VOICE</span></td>
+            <td>Custom Local Wake-Word Trigger Mechanism Setup.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/deepsleep" class="cmd-btn">/deepsleep</a></td>
+            <td><span class="tag tag-gold">POWER</span></td>
+            <td>Toggle 30-Second Deep Sleep Memory Buffer Optimization.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/flush" class="cmd-btn">/flush</a></td>
+            <td><span class="tag tag-red">MEMORY</span></td>
+            <td>Purge Short-Term Audio Buffer & Speech Cache.</td>
+          </tr>
+          <tr>
+            <td><a href="command:/help" class="cmd-btn">/help</a></td>
+            <td><span class="tag tag-cyan">ASSIST</span></td>
+            <td>Matrix Operator Command Manual Summary.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
   </div>
 
   <footer>
-    <div>⚡ MATRIX AGENT SMITH OPERATOR MANUAL // SYSTEM SPECIFICATION v3.5</div>
+    <div>⚡ MATRIX AGENT SMITH OPERATOR MANUAL // SYSTEM SPECIFICATION v4.5 (HERMES)</div>
     <div style="margin-top: 6px; color: var(--matrix-muted);">Confidential // Machine Defense Protocol // AI Studio Engine</div>
   </footer>
-
-  <script>
-    function filterGuide() {
-      const input = document.getElementById('guideSearch').value.toLowerCase();
-      const sections = document.querySelectorAll('.section-card, .use-case-card');
-      
-      sections.forEach(sec => {
-        const text = sec.innerText.toLowerCase();
-        if (text.includes(input)) {
-          sec.style.display = 'block';
-        } else {
-          sec.style.display = 'none';
-        }
-      });
-    }
-
-    // Smooth scroll for nav links
-    document.querySelectorAll('nav a').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href').substring(1);
-        const targetElem = document.getElementById(targetId);
-        if (targetElem) {
-          targetElem.scrollIntoView({ behavior: 'smooth' });
-          document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-          this.classList.add('active');
-        }
-      });
-    });
-  </script>
 </body>
 </html>

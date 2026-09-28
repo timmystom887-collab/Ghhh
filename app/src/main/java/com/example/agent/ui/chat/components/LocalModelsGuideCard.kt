@@ -55,6 +55,24 @@ fun LocalModelsGuideCard(
             speedTps = "55–75 tok/s (Low Latency)",
             memoryFootprint = "1.1GB (Q4_K_M)",
             bestUseCases = "Autonomous local task execution, rapid on-device processing, and secure private operations."
+        ),
+        LocalModelBenchmark(
+            id = "hermes_3_llama_3_8b",
+            modelName = "Nous Hermes 3 (Llama-3.1 8B)",
+            parameters = "8.0B (Instruct / Tool Calling)",
+            toolCallingScore = "98.2% (State-of-the-Art Function Calling)",
+            speedTps = "28–42 tok/s (Quantized Q4_K_M)",
+            memoryFootprint = "4.6GB (Q4_K_M)",
+            bestUseCases = "Complex multi-step tool execution, structured JSON/XML generation, agentic reasoning, and autonomous code synthesis."
+        ),
+        LocalModelBenchmark(
+            id = "hermes_2_pro_mistral_7b",
+            modelName = "Hermes-2-Pro (Mistral-7B)",
+            parameters = "7.2B (Function Calling)",
+            toolCallingScore = "95.8% (Precise JSON Mode)",
+            speedTps = "32–48 tok/s (Quantized Q4_K_M)",
+            memoryFootprint = "4.1GB (Q4_K_M)",
+            bestUseCases = "Structured parameter extraction, API routing, and offline MCP tool orchestration."
         )
     )
 
@@ -65,6 +83,8 @@ fun LocalModelsGuideCard(
     val availableModels = listOf(
         "Google Gemini (gemini-3.5-flash)",
         "Groq AI Llama-3-70b",
+        "Nous Hermes 3 (Llama-3.1 8B)",
+        "Hermes-2-Pro (Mistral-7B)",
         "Qwen 3 Q 1.7B (Pre-installed)"
     )
 

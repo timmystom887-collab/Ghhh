@@ -8,6 +8,7 @@ val MatrixBackground = Color(0xFF040B05)
 val MatrixSurface = Color(0xFF071409)
 val MatrixSurfaceVariant = Color(0xFF0D2210)
 val MatrixSurfaceHighlight = Color(0xFF143318)
+val MatrixDarkGray = Color(0xFF0F1C12)
 
 val MatrixGreenPrimary = Color(0xFF00FF41)
 val MatrixGreenBright = Color(0xFF50FF88)

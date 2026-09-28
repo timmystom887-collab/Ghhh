@@ -67,14 +67,16 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.agent.ui.chat.components.AiCoreGateCard
 import com.example.agent.ui.chat.components.CallHistoryCard
+import com.example.agent.ui.chat.components.HermesAgentCard
 import com.example.agent.ui.chat.components.KnowledgeBaseCard
 import com.example.agent.ui.chat.components.LocalModelsGuideCard
 import com.example.agent.ui.chat.components.MatrixMemoryCard
 import com.example.agent.ui.chat.components.MatrixToolsMenuCard
-import com.example.agent.ui.chat.components.McpServerManagementDialog
 import com.example.agent.ui.chat.components.McpServerOrchestratorCard
 import com.example.agent.ui.chat.components.McpSkillsCard
 import com.example.agent.ui.theme.MatrixBorder
+import com.example.agent.ui.chat.components.MatrixTerminalConsole
+import com.example.agent.ui.chat.components.SubAgentClarificationDialog
 import com.example.agent.ui.chat.components.MessageCard
 import com.example.agent.ui.chat.components.OptionsMenuCard
 import com.example.agent.ui.chat.components.PhoneCallAgentCard
@@ -156,6 +158,10 @@ fun ChatScreen(
     val subAgentState by viewModel.subAgentState.collectAsState()
     val providerModels by viewModel.providerModels.collectAsState()
     val nodeStatuses by viewModel.nodeStatuses.collectAsState()
+    val hermesLiveSteps by viewModel.hermesLiveSteps.collectAsState()
+    val latestResearchDossier by viewModel.latestResearchDossier.collectAsState()
+    val isHermesProcessing by viewModel.isHermesProcessing.collectAsState()
+    val hermesStatus by viewModel.hermesStatus.collectAsState()
     
     // Character Card v2 State
     val charName by viewModel.charName.collectAsState()
@@ -169,6 +175,10 @@ fun ChatScreen(
     val voiceModeActive by viewModel.voiceModeActive.collectAsState()
     val isListening by viewModel.isListening.collectAsState()
     val liveTranscript by viewModel.liveTranscript.collectAsState()
+
+    val terminalLogs by viewModel.terminalLogs.collectAsState()
+    val isTerminalExpanded by viewModel.isTerminalExpanded.collectAsState()
+    val activeClarification by viewModel.activeClarification.collectAsState()
 
     val delegationTree by viewModel.currentDelegationTree.collectAsState()
     val swarmState by viewModel.currentSwarmState.collectAsState()
@@ -260,6 +270,19 @@ fun ChatScreen(
         isProcessing = isProcessing,
         activityLevel = dynamicActivityLevel
     ) {
+        // Sub-Agent Interactive Clarification Popup Dialog
+        activeClarification?.let { req ->
+            SubAgentClarificationDialog(
+                request = req,
+                onRespond = { request, responseText ->
+                    viewModel.submitClarificationResponse(request, responseText)
+                },
+                onDismiss = {
+                    viewModel.dismissClarification()
+                }
+            )
+        }
+
         if (showMcpMenu) {
             androidx.compose.ui.window.Dialog(
                 onDismissRequest = { viewModel.closeMcpMenu() },
@@ -437,6 +460,17 @@ fun ChatScreen(
                         }
                     }
 
+                    // Floating Matrix Terminal Console Layer
+                    MatrixTerminalConsole(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        logs = terminalLogs,
+                        isExpanded = isTerminalExpanded,
+                        onToggleExpand = { viewModel.toggleTerminalExpanded() },
+                        onExecuteCommand = { cmd -> viewModel.executeTerminalCommand(cmd) },
+                        onClearLogs = { viewModel.clearTerminalLogs() },
+                        onTriggerSampleClarification = { viewModel.triggerSampleClarification("hermes") }
+                    )
+
                     QuickActionsRow(
                         onTriggerCallAgent = { viewModel.sendMessage("/call Metro Bistro reserve table for 2 at 7:30pm under Anderson") },
                         onOpenCallLogs = { viewModel.sendMessage("/calls") },
@@ -454,7 +488,8 @@ fun ChatScreen(
                         onOpenToolsMenu = { viewModel.sendMessage("/tools") },
                         onOpenThinkingMethods = { viewModel.sendMessage("/thinking") },
                         onOpenAutomatedSystems = { viewModel.sendMessage("/automation") },
-                        onTriggerGhostCall = { viewModel.sendMessage("/ghostcall") }
+                        onTriggerGhostCall = { viewModel.sendMessage("/ghostcall") },
+                        onOpenHermesAgent = { viewModel.sendMessage("/hermes") }
                     )
 
                     Row(
@@ -557,9 +592,11 @@ fun ChatScreen(
                     }
                 } else if (profile == null || !profile!!.onboardingCompleted) {
                     Box(modifier = Modifier.padding(16.dp)) {
-                        OnboardingCard { name, email, phone ->
-                            onboardingViewModel.saveProfile(name, email, phone)
-                        }
+                        OnboardingCard(
+                            onComplete = { name, email, phone ->
+                                onboardingViewModel.saveProfile(name, email, phone)
+                            }
+                        )
                     }
                 } else {
                     Column(modifier = Modifier.fillMaxSize()) {
@@ -596,6 +633,14 @@ fun ChatScreen(
                                 "user_guide" -> UserGuideCard(
                                     onNavigateSection = { },
                                     onExecuteCommand = { cmd -> viewModel.sendMessage(cmd) }
+                                )
+                                "hermes_agent", "deep_research" -> HermesAgentCard(
+                                    onExecuteGoal = { goal -> viewModel.runHermesGoal(goal) },
+                                    onRunDeepResearch = { topic -> viewModel.runHermesDeepResearch(topic) },
+                                    liveSteps = hermesLiveSteps,
+                                    latestDossier = latestResearchDossier,
+                                    isProcessing = isHermesProcessing,
+                                    progressStatus = hermesStatus
                                 )
                                 "knowledge_base" -> KnowledgeBaseCard(
                                     knowledgeList = knowledgeList,

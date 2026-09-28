@@ -3,6 +3,6 @@
     <item
         android:width="66dp"
         android:height="66dp"
-        android:drawable="@drawable/agent_smith_matrix_icon_1790310729600"
+        android:drawable="@drawable/app_icon_new"
         android:gravity="center" />
 </layer-list>
